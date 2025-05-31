@@ -242,6 +242,9 @@ class M_IniHelper:
             # 添加RenderTextures里的的贴图
             for render_texture_name in render_texture_files:
                 texture_hash = render_texture_name.split("_")[0]
+                
+                if "!U!" in texture_hash:
+                    continue
 
                 if texture_hash in slot_style_texture_hash_list:
                     continue
