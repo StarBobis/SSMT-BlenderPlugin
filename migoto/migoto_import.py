@@ -376,8 +376,15 @@ def import_3dmigoto_raw_buffers(operator, context, fmt_path:str, vb_path:str, ib
         obj.rotation_euler[2] = 0.0  # Z轴
 
     # 设置导入时模型大小比例，Unreal模型常用
+
     scalefactor = Properties_ImportModel.model_scale()
-    obj.scale = scalefactor,scalefactor,scalefactor
+    if scalefactor == 1.0:
+        if fmt_file.scale != "1.0":
+            obj.scale.x = float(fmt_file.scale)
+            obj.scale.y = float(fmt_file.scale)
+            obj.scale.z = float(fmt_file.scale)
+    else:
+        obj.scale = scalefactor,scalefactor,scalefactor
 
     # 导入时翻转模型
     if Properties_ImportModel.import_flip_scale_x():

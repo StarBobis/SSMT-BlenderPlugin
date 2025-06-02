@@ -71,6 +71,7 @@ class FMTFile:
         self.format = ""
         self.gametypename = ""
         self.prefix = ""
+        self.scale = ""
         self.elements:list[D3D11Element] = []
 
         with open(filename, 'r') as file:
@@ -93,6 +94,8 @@ class FMTFile:
                 self.gametypename = value
             elif key == "prefix":
                 self.prefix = value
+            elif key == "scale":
+                self.scale = value
             elif key.startswith("element"):
                 # 处理element块
                 if "SemanticName" in element_info:
