@@ -71,7 +71,7 @@ class FMTFile:
         self.format = ""
         self.gametypename = ""
         self.prefix = ""
-        self.scale = ""
+        self.scale = "1.0"
         self.elements:list[D3D11Element] = []
 
         with open(filename, 'r') as file:
