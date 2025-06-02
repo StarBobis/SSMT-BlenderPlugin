@@ -198,11 +198,10 @@ register_classes = (
 
 
     # SSMT预备代码
-    PanelSSMTBasicConfig,
-
-    PanelSSMTExtractModel,
-    SSMTExtractModelGI,
-    SSMTExtractModelZZZ,
+    # PanelSSMTBasicConfig,
+    # PanelSSMTExtractModel,
+    # SSMTExtractModelGI,
+    # SSMTExtractModelZZZ,
 )
 
 
