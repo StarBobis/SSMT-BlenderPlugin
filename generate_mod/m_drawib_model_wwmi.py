@@ -109,57 +109,59 @@ class DrawIBModelWWMI:
         # (11) 拼接ShapeKey数据
         if obj.data.shape_keys is None or len(getattr(obj.data.shape_keys, 'key_blocks', [])) == 0:
             print(f'No shapekeys found to process!')
-            return {}
-
-        shapekey_offsets, shapekey_vertex_ids, shapekey_vertex_offsets = [], [], []
-        shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
-        shapekey_ids = {}
-        
-        for shapekey in obj.data.shape_keys.key_blocks:
-            match = shapekey_pattern.findall(shapekey.name.lower())
-            if len(match) == 0:
-                continue
-            shapekey_id = int(match[0])
-            shapekey_ids[shapekey_id] = shapekey.name
-
-        shapekeys = ShapeKeyUtils.get_shapekey_data(obj, names_filter=list(shapekey_ids.values()), deduct_basis=True)
-
-        shapekey_verts_count = 0
-
-        vertex_ids = numpy.arange(len(obj.data.vertices))
-        for group_id in range(128):
-
-            shapekey = shapekeys.get(shapekey_ids.get(group_id, -1), None)
-
-            # print(shapekey)
-            if shapekey is None or not (-0.00000001 > numpy.min(shapekey) or numpy.max(shapekey) > 0.00000001):
-                shapekey_offsets.extend([shapekey_verts_count if shapekey_verts_count != 0 else 0])
-                continue
-
-            shapekey_offsets.extend([shapekey_verts_count])
-
-            shapekey = shapekey[vertex_ids]
-
-            shapekey_vert_ids = numpy.where(numpy.any(shapekey != 0, axis=1))[0]
-
-            shapekey_vertex_ids.extend(shapekey_vert_ids)
-            shapekey_vertex_offsets.extend(shapekey[shapekey_vert_ids])
-            shapekey_verts_count += len(shapekey_vert_ids)
+            self.shapekey_offsets = []
+            self.shapekey_vertex_ids = []
+            self.shapekey_vertex_offsets = []
+        else:
+            shapekey_offsets, shapekey_vertex_ids, shapekey_vertex_offsets = [], [], []
+            shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
+            shapekey_ids = {}
             
-        if len(shapekey_vertex_ids) == 0:
-            return {}
+            for shapekey in obj.data.shape_keys.key_blocks:
+                match = shapekey_pattern.findall(shapekey.name.lower())
+                if len(match) == 0:
+                    continue
+                shapekey_id = int(match[0])
+                shapekey_ids[shapekey_id] = shapekey.name
 
-        shapekey_offsets = numpy.array(shapekey_offsets)
-        
-        shapekey_vertex_offsets_np = numpy.zeros(len(shapekey_vertex_offsets), dtype=(numpy.float16, 6))
-        # shapekey_vertex_offsets = numpy.zeros(len(shapekey_vertex_offsets), dtype=numpy.float16)
-        shapekey_vertex_offsets_np[:, 0:3] = shapekey_vertex_offsets
+            shapekeys = ShapeKeyUtils.get_shapekey_data(obj, names_filter=list(shapekey_ids.values()), deduct_basis=True)
 
-        shapekey_vertex_ids = numpy.array(shapekey_vertex_ids, dtype=numpy.uint32)
+            shapekey_verts_count = 0
 
-        self.shapekey_offsets = shapekey_offsets
-        self.shapekey_vertex_ids = shapekey_vertex_ids
-        self.shapekey_vertex_offsets = shapekey_vertex_offsets_np
+            vertex_ids = numpy.arange(len(obj.data.vertices))
+            for group_id in range(128):
+
+                shapekey = shapekeys.get(shapekey_ids.get(group_id, -1), None)
+
+                # print(shapekey)
+                if shapekey is None or not (-0.00000001 > numpy.min(shapekey) or numpy.max(shapekey) > 0.00000001):
+                    shapekey_offsets.extend([shapekey_verts_count if shapekey_verts_count != 0 else 0])
+                    continue
+
+                shapekey_offsets.extend([shapekey_verts_count])
+
+                shapekey = shapekey[vertex_ids]
+
+                shapekey_vert_ids = numpy.where(numpy.any(shapekey != 0, axis=1))[0]
+
+                shapekey_vertex_ids.extend(shapekey_vert_ids)
+                shapekey_vertex_offsets.extend(shapekey[shapekey_vert_ids])
+                shapekey_verts_count += len(shapekey_vert_ids)
+                
+            if len(shapekey_vertex_ids) == 0:
+                print(f'No shapekeys found to process! 222')
+
+            shapekey_offsets = numpy.array(shapekey_offsets)
+            
+            shapekey_vertex_offsets_np = numpy.zeros(len(shapekey_vertex_offsets), dtype=(numpy.float16, 6))
+            # shapekey_vertex_offsets = numpy.zeros(len(shapekey_vertex_offsets), dtype=numpy.float16)
+            shapekey_vertex_offsets_np[:, 0:3] = shapekey_vertex_offsets
+
+            shapekey_vertex_ids = numpy.array(shapekey_vertex_ids, dtype=numpy.uint32)
+
+            self.shapekey_offsets = shapekey_offsets
+            self.shapekey_vertex_ids = shapekey_vertex_ids
+            self.shapekey_vertex_offsets = shapekey_vertex_offsets_np
 
         bpy.data.objects.remove(obj, do_unlink=True)
 

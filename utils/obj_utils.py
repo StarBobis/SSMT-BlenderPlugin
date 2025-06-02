@@ -691,10 +691,13 @@ class ObjUtils:
                     
                     temp_obj = cls.copy_object(bpy.context, obj, name=f'TEMP_{obj.name}', collection=draw_ib_collection)
 
-                    components[component_id].objects.append(TempObject(
-                        name=obj.name,
-                        object=temp_obj,
-                    ))
+                    try:
+                        components[component_id].objects.append(TempObject(
+                            name=obj.name,
+                            object=temp_obj,
+                        ))
+                    except Exception as e:
+                        print(f"Error appending object to component: {e}")
 
         # 3.准备临时对象
         index_offset = 0
