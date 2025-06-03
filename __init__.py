@@ -186,11 +186,11 @@ register_classes = (
     PanelModelImportConfig,
     PanelGenerateModConfig,
     PanelButtons,
-    UpdaterPanel,
+    # UpdaterPanel,
     PanelModelProcess,
 
 
-    HertaUpdatePreference,
+    # HertaUpdatePreference,
 
 
     ExtractSubmeshOperator,

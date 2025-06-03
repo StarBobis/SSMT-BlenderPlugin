@@ -72,6 +72,11 @@ class FMTFile:
         self.gametypename = ""
         self.prefix = ""
         self.scale = "1.0"
+        self.rotate_angle:bool = False
+        self.rotate_angle_x:float = 0
+        self.rotate_angle_y:float = 0
+        self.rotate_angle_z:float = 0
+
         self.elements:list[D3D11Element] = []
 
         with open(filename, 'r') as file:
@@ -96,6 +101,14 @@ class FMTFile:
                 self.prefix = value
             elif key == "scale":
                 self.scale = value
+            elif key == "rotate_angle":
+                self.rotate_angle = value.lower() == "true"
+            elif key == "rotate_angle_x":
+                self.rotate_angle_x = float(value)
+            elif key == "rotate_angle_y":
+                self.rotate_angle_y = float(value)
+            elif key == "rotate_angle_z":
+                self.rotate_angle_z = float(value)
             elif key.startswith("element"):
                 # 处理element块
                 if "SemanticName" in element_info:

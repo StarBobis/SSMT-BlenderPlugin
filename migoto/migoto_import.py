@@ -333,7 +333,7 @@ def import_3dmigoto_raw_buffers(operator, context, fmt_path:str, vb_path:str, ib
             blend_weights[tmpi] = new_dict
             tmpi = tmpi + 1
 
-    print("导入UV")
+    # print("导入UV")
     import_uv_layers(mesh, obj, texcoords)
 
     #  metadata.json, if contains then we can import merged vgmap.
@@ -349,11 +349,12 @@ def import_3dmigoto_raw_buffers(operator, context, fmt_path:str, vb_path:str, ib
                 partname_count = int(fmt_filename.split("-")[1]) - 1
                 # print("import partname count: " + str(partname_count))
                 component = extracted_object.components[partname_count]
-    print("导入顶点组")
 
+    # print("导入顶点组")
     import_vertex_groups(mesh, obj, blend_indices, blend_weights, component)
-    print("导入形态键")
 
+
+    # print("导入形态键")
     import_shapekeys(mesh, obj, shapekeys)
 
     # Validate closes the loops so they don't disappear after edit mode and probably other important things:
@@ -366,17 +367,16 @@ def import_3dmigoto_raw_buffers(operator, context, fmt_path:str, vb_path:str, ib
         mesh.normals_split_custom_set_from_vertices(normals)
         mesh.calc_tangents()
 
-    # auto texture 
+    # 自动上DiffuseMap贴图
     create_bsdf_with_diffuse_linked(obj, mesh_name=mesh_name,directory= os.path.dirname(fmt_path))
 
-    # ZZZ need reset rotation.
-    if GlobalConfig.gamename not in ["GI","HI3","HSR","Game001"]:
-        obj.rotation_euler[0] = 0.0  # X轴
-        obj.rotation_euler[1] = 0.0  # Y轴
-        obj.rotation_euler[2] = 0.0  # Z轴
+    # 设置导入时的模型旋转角度，每个游戏都不一样，由生成fmt的程序控制。
+    if fmt_file.rotate_angle:
+        obj.rotation_euler[0] = math.radians(fmt_file.rotate_angle_x)
+        obj.rotation_euler[1] = math.radians(fmt_file.rotate_angle_y)
+        obj.rotation_euler[2] = math.radians(fmt_file.rotate_angle_z)
 
     # 设置导入时模型大小比例，Unreal模型常用
-
     scalefactor = Properties_ImportModel.model_scale()
     if scalefactor == 1.0:
         if fmt_file.scale != "1.0":
