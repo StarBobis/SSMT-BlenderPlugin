@@ -49,13 +49,12 @@ https://github.com/BlackStartx/PyCharm-Blender-Plugin
 # XXX 所有的文件夹都必须小写，因为git无法追踪文件夹名称大小写改变的记录
 
 bl_info = {
-    "name": "Herta",
-    "description": "A blender plugin for generate 3Dmigoto mod.",
-    "blender": (4, 2, 0),
-    "version": (1, 3, 1),
+    "name": "SSMT",
+    "description": "Super Simple Migoto Tool",
+    "blender": (3, 6, 0),
+    "version": (1, 3, 2),
     "location": "View3D",
-    "category": "Generic",
-    "tracker_url":"https://github.com/StarBobis/HertaBlender"
+    "category": "Generic"
 }
 
 class UpdaterPanel(bpy.types.Panel):
@@ -65,7 +64,7 @@ class UpdaterPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = "objectmode"
-    bl_category = "Herta"
+    bl_category = "SSMT"
     bl_order = 99
     bl_options = {'DEFAULT_CLOSED'}
 

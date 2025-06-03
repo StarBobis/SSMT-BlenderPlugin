@@ -43,7 +43,7 @@ class MigotoAttributePanel(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_CATTER_MigotoAttribute_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Herta'
+    bl_category = 'SSMT'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -83,7 +83,7 @@ class PanelModelImportConfig(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_CATTER_WorkSpace_IO_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Herta'
+    bl_category = 'SSMT'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -101,7 +101,7 @@ class PanelGenerateModConfig(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_CATTER_GenerateMod_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Herta'
+    bl_category = 'SSMT'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -135,11 +135,11 @@ class PanelGenerateModConfig(bpy.types.Panel):
     
 
 class PanelButtons(bpy.types.Panel):
-    bl_label = "Herta基础面板" 
+    bl_label = "SSMT基础面板" 
     bl_idname = "VIEW3D_PT_CATTER_Buttons_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Herta'
+    bl_category = 'SSMT'
     
 
     def draw(self, context):
