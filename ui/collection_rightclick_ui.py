@@ -24,7 +24,7 @@ class Catter_MarkCollection_Toggle(bpy.types.Operator):
     
 class SSMT_LinkObjectsToCollection(bpy.types.Operator):
     bl_idname = "object.link_objects_to_collection"
-    bl_label = "分支:链接物体到集合"
+    bl_label = "链接:链接物体到集合"
     bl_description = "将选中的物体链接到当前选中的集合"
 
     def execute(self, context):
@@ -52,10 +52,40 @@ class SSMT_LinkObjectsToCollection(bpy.types.Operator):
         print(f"已将 {len(selected_objects)} 个物体链接到集合 '{target_collection.name}'")
         return {'FINISHED'}
 
+class SSMT_UnlinkObjectsFromCollection(bpy.types.Operator):
+    bl_idname = "object.unlink_objects_from_collection"
+    bl_label = "链接:从集合中移除选中的链接物体"
+    bl_description = "将选中的物体从当前选中的集合中移除"
 
+    def execute(self, context):
+        """从活动集合中移除选中的物体"""
+        # 获取选中的物体
+        selected_objects = bpy.context.selected_objects
+        if not selected_objects:
+            print("没有选中的物体")
+            return
+        
+        # 获取活动集合（最后选中的集合）
+        if bpy.context.view_layer.active_layer_collection:
+            target_collection = bpy.context.view_layer.active_layer_collection.collection
+        else:
+            print("请先在大纲视图中选中目标集合")
+            return
+        
+        # 从活动集合中移除选中的物体
+        unlinked_count = 0
+        for obj in selected_objects:
+            # 确保物体在目标集合中
+            if obj.name in target_collection.objects:
+                target_collection.objects.unlink(obj)
+                unlinked_count += 1
+        
+        print(f"已从集合 '{target_collection.name}' 移除 {unlinked_count} 个物体")
+        return {'FINISHED'}
 
 def menu_dbmt_mark_collection_switch(self, context):
     self.layout.separator()
     self.layout.operator(Catter_MarkCollection_Toggle.bl_idname)
     self.layout.operator(Catter_MarkCollection_Switch.bl_idname)
     self.layout.operator(SSMT_LinkObjectsToCollection.bl_idname)
+    self.layout.operator(SSMT_UnlinkObjectsFromCollection.bl_idname)

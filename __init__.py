@@ -74,7 +74,7 @@ register_classes = (
     Catter_MarkCollection_Switch,
     Catter_MarkCollection_Toggle,
     SSMT_LinkObjectsToCollection,
-
+    SSMT_UnlinkObjectsFromCollection,
     # UI
     MigotoAttributePanel,
     PanelModelImportConfig,
