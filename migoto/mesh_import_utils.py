@@ -149,7 +149,7 @@ class MeshImportUtils:
         MeshImportUtils.create_bsdf_with_diffuse_linked(obj, mesh_name=mbf.mesh_name,directory=os.path.dirname(mbf.fmt_path))
         MeshImportUtils.set_import_rotate_angle(obj=obj, mbf=mbf)
         MeshImportUtils.set_import_scale(obj=obj, mbf=mbf)
-        MeshImportUtils.set_import_flip(obj=obj)
+        MeshImportUtils.set_import_flip(obj=obj, mbf=mbf)
 
         TimerUtils.End("Import 3Dmigoto Raw")
 
@@ -177,11 +177,17 @@ class MeshImportUtils:
 
 
     @classmethod
-    def set_import_flip(cls,obj):
+    def set_import_flip(cls,obj,mbf:MigotoBinaryFile):
         # 导入时翻转模型
-        if Properties_ImportModel.import_flip_scale_x():
+        # 优先考虑fmt里的值，其次才考虑全局设置
+        if mbf.fmt_file.flip_mirror:
             obj.scale.x = obj.scale.x * -1
-        if Properties_ImportModel.import_flip_scale_y():
+        elif Properties_ImportModel.import_flip_scale_x():
+            obj.scale.x = obj.scale.x * -1
+
+        if mbf.fmt_file.flip_winding:
+            obj.scale.y = obj.scale.y * -1
+        elif Properties_ImportModel.import_flip_scale_y():
             obj.scale.y = obj.scale.y * -1
 
     @classmethod
