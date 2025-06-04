@@ -31,6 +31,131 @@ import bpy
 import bmesh
 
 
+class ShapeKeyHelper:
+    @classmethod
+    def extract_shapekey_data(cls,merged_obj,index_vertex_id_dict):
+        '''
+        传入MergedObj，提取出其形态键数据
+        '''
+        # TimerUtils.Start("read shapekey data")
+
+        shapekey_index_list = []
+        shapekey_data = {}
+        vertex_count_offset = 0
+
+        obj = merged_obj
+        obj_name = obj.name
+        mesh = obj.data
+
+        print("Processing obj: " + obj_name)
+
+        
+        # 如果这个obj的mesh没有形态键，那就直接跳过不处理
+        mesh_shapekeys = mesh.shape_keys
+        if mesh_shapekeys is None:
+            print("obj: " + obj_name + " 不含有形态键，跳过处理")
+            vertex_count_offset = vertex_count_offset + len(mesh.vertices)
+            return None, None, None
+        else:
+            print(obj_name + "'s shapekey number: " + str(len(mesh.shape_keys.key_blocks)))
+
+        base_data = mesh_shapekeys.key_blocks['Basis'].data
+        for shapekey in mesh_shapekeys.key_blocks:
+            # 截取形态键名称中的形态键shapekey_id，获取不到就跳过
+            shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
+            match = shapekey_pattern.findall(shapekey.name.lower())
+            if len(match) == 0:
+                # print("当前形态键名称:" +shapekey.name + " 不是以Deform开头的，进行跳过")
+                continue
+            # else:
+            #     print(shapekey.name)
+
+            shapekey_index = int(match[0])
+
+            # 因为WWMI的形态键数量只有128个，这里shapekey_id是从0开始的，所以到127结束，所以不能大于等于128
+            if shapekey_index >= 128:
+                break
+
+            if shapekey_index not in shapekey_index_list:
+                # print("添加形态键Index: " + str(shapekey_index))
+                shapekey_index_list.append(shapekey_index)
+
+            # 对于这个obj的每个顶点，我们都要尝试从当前shapekey中获取数据，如果获取到了，就放入缓存
+            for vertex_index in range(len(mesh.vertices)):
+                base_vertex_coords = base_data[vertex_index].co
+                shapekey_vertex_coords = shapekey.data[vertex_index].co
+                vertex_offset = shapekey_vertex_coords - base_vertex_coords
+                # 到这里已经有vertex_id、shapekey_id、vertex_offset了，就不用像WWMI一样再从缓存读取了
+                offseted_vertex_index = vertex_index + vertex_count_offset
+
+                if offseted_vertex_index not in shapekey_data:
+                    shapekey_data[offseted_vertex_index] = {}
+
+                # 如果相差太小，说明无效或者是一样的，说明这个顶点没有ShapeKey，此时向ShapeKeyOffsets中添加空的0
+                if vertex_offset.length < 0.000000001:
+                    # print("相差太小，跳过处理。")
+                    continue
+                
+                # 此时如果能获取到，说明有效，此时可以直接放入准备好的字典
+                shapekey_data[offseted_vertex_index][shapekey_index] = list(vertex_offset)
+
+            # break
+        # 对于每一个obj的每个顶点，都从0到128获取它的形态键对应偏移值
+        vertex_count_offset = vertex_count_offset + len(mesh.vertices)
+        # print("vertex_count_offset: " + str(vertex_count_offset))
+        
+
+        # 转换格式问题
+        shapekey_cache = {shapekey_id:{} for shapekey_id in shapekey_index_list}
+
+        global_index_offset = 0
+        global_vertex_offset = 0
+
+        # 计算出独立顶点数
+        ids = index_vertex_id_dict.keys()
+        ids_set = set(ids)
+        unique_vertex_count = len(ids_set)
+        print("unique_vertex_count: " + str(unique_vertex_count))
+
+        # 获取当前obj每个Index对应的VertexId
+        for index_id,vertex_id in index_vertex_id_dict.items():
+            # 这样VertexId加上全局偏移，就能获取到对应位置的形态键数据：
+            vertex_shapekey_data = shapekey_data.get(vertex_id + global_vertex_offset, None)
+            if vertex_shapekey_data is not None:
+                for shapekey_index,vertex_offsets in vertex_shapekey_data.items():
+                    # 然后这里IndexId加上全局IndexId偏移，就得到了obj整体的IndexId，存到对应的ShapeKeyIndex上面
+                    shapekey_cache[shapekey_index][index_id + global_index_offset] = vertex_offsets
+
+        global_index_offset = global_index_offset + unique_vertex_count
+        global_vertex_offset = global_vertex_offset + len(mesh.vertices)
+    
+        print("global_index_offset: " + str(global_index_offset))
+        # print("global_vertex_offset: " + str(global_vertex_offset))
+        LOG.newline()
+
+        shapekey_verts_count = 0
+        # 从0到128去获取ShapeKey的Index，有就直接加到
+
+        shapekey_offsets = []
+        shapekey_vertex_ids = []
+        shapekey_vertex_offsets = []
+
+        for group_id in range(128):
+            shapekey = shapekey_cache.get(group_id, None)
+            if shapekey is None or len(shapekey_cache[group_id]) == 0:
+                shapekey_offsets.extend([shapekey_verts_count if shapekey_verts_count != 0 else 0])
+                continue
+
+            shapekey_offsets.extend([shapekey_verts_count])
+
+            for draw_index, vertex_offsets in shapekey.items():
+                shapekey_vertex_ids.extend([draw_index])
+                shapekey_vertex_offsets.extend(vertex_offsets + [0, 0, 0])
+                shapekey_verts_count += 1
+        
+        return shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets
+
+
 class DrawIBModelWWMI:
     '''
     注意，单个IB的WWMI架构必定存在135W顶点索引的数量上限
@@ -76,10 +201,10 @@ class DrawIBModelWWMI:
                 self.obj_name_drawindexed_dict[comp_obj.name] = draw_indexed_obj
 
         # (98) 选中当前融合的obj对象，计算得到ib和category_buffer，以及每个IndexId对应的VertexId
-        obj = self.merged_object.object
-        bpy.context.view_layer.objects.active = obj
+        merged_obj = self.merged_object.object
+        bpy.context.view_layer.objects.active = merged_obj
         
-        ib, category_buffer_dict = get_buffer_ib_vb_fast(self.d3d11GameType)
+        ib, category_buffer_dict,index_vertex_id_dict = get_buffer_ib_vb_fast(self.d3d11GameType)
         
 
         # (9) 构建每个Category的VertexBuffer，每个Category都生成一个CategoryBuffer文件。
@@ -107,69 +232,25 @@ class DrawIBModelWWMI:
         self.draw_number = int(position_bytelength/position_stride)
 
         # (11) 拼接ShapeKey数据
-        if obj.data.shape_keys is None or len(getattr(obj.data.shape_keys, 'key_blocks', [])) == 0:
+        if merged_obj.data.shape_keys is None or len(getattr(merged_obj.data.shape_keys, 'key_blocks', [])) == 0:
             print(f'No shapekeys found to process!')
             self.shapekey_offsets = []
             self.shapekey_vertex_ids = []
             self.shapekey_vertex_offsets = []
         else:
-            shapekey_offsets, shapekey_vertex_ids, shapekey_vertex_offsets = [], [], []
-            shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
-            shapekey_ids = {}
-            
-            for shapekey in obj.data.shape_keys.key_blocks:
-                match = shapekey_pattern.findall(shapekey.name.lower())
-                if len(match) == 0:
-                    continue
-                shapekey_id = int(match[0])
-                shapekey_ids[shapekey_id] = shapekey.name
-
-            shapekeys = ShapeKeyUtils.get_shapekey_data(obj, names_filter=list(shapekey_ids.values()), deduct_basis=True)
-
-            shapekey_verts_count = 0
-
-            vertex_ids = numpy.arange(len(obj.data.vertices))
-            for group_id in range(128):
-
-                shapekey = shapekeys.get(shapekey_ids.get(group_id, -1), None)
-
-                # print(shapekey)
-                if shapekey is None or not (-0.00000001 > numpy.min(shapekey) or numpy.max(shapekey) > 0.00000001):
-                    shapekey_offsets.extend([shapekey_verts_count if shapekey_verts_count != 0 else 0])
-                    continue
-
-                shapekey_offsets.extend([shapekey_verts_count])
-
-                shapekey = shapekey[vertex_ids]
-
-                shapekey_vert_ids = numpy.where(numpy.any(shapekey != 0, axis=1))[0]
-
-                shapekey_vertex_ids.extend(shapekey_vert_ids)
-                shapekey_vertex_offsets.extend(shapekey[shapekey_vert_ids])
-                shapekey_verts_count += len(shapekey_vert_ids)
-                
-            if len(shapekey_vertex_ids) == 0:
-                print(f'No shapekeys found to process! 222')
-
-            shapekey_offsets = numpy.array(shapekey_offsets)
-            
-            shapekey_vertex_offsets_np = numpy.zeros(len(shapekey_vertex_offsets), dtype=(numpy.float16, 6))
-            # shapekey_vertex_offsets = numpy.zeros(len(shapekey_vertex_offsets), dtype=numpy.float16)
-            shapekey_vertex_offsets_np[:, 0:3] = shapekey_vertex_offsets
-
-            shapekey_vertex_ids = numpy.array(shapekey_vertex_ids, dtype=numpy.uint32)
+            shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets_np = ShapeKeyHelper.extract_shapekey_data(merged_obj=merged_obj,index_vertex_id_dict=index_vertex_id_dict)
 
             self.shapekey_offsets = shapekey_offsets
             self.shapekey_vertex_ids = shapekey_vertex_ids
             self.shapekey_vertex_offsets = shapekey_vertex_offsets_np
 
-        bpy.data.objects.remove(obj, do_unlink=True)
+        bpy.data.objects.remove(merged_obj, do_unlink=True)
 
         # (12) 导出Buffer文件，Export Index Buffer files, Category Buffer files. (And Export ShapeKey Buffer Files.(WWMI))
         # 用于写出IB时使用
         # 拼接每个PartName对应的IB文件的Resource和filename,这样生成ini的时候以及导出Mod的时候就可以直接使用了。
         style_part_name = "Component1"
-        ib_resource_name = "Resource_" + self.draw_ib + "_" + style_part_name
+        # ib_resource_name = "Resource_" + self.draw_ib + "_" + style_part_name
         ib_buf_filename = self.draw_ib + "-" + style_part_name + ".buf"
 
         # 导出当前Mod的所有Buffer文件

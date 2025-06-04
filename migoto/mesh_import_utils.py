@@ -123,15 +123,14 @@ class MeshImportUtils:
         #  metadata.json, if contains then we can import merged vgmap.
         component = None
         if Properties_WWMI.import_merged_vgmap() and GlobalConfig.gamename == "WWMI":
-            # print("尝试读取Metadata.json")
+            print("尝试读取Metadata.json")
             metadatajsonpath = os.path.join(os.path.dirname(mbf.fmt_path),'Metadata.json')
             if os.path.exists(metadatajsonpath):
-                # print("鸣潮读取Metadata.json")
+                print("鸣潮读取Metadata.json")
                 extracted_object = ExtractedObjectHelper.read_metadata(metadatajsonpath)
-                fmt_filename = os.path.splitext(os.path.basename(mbf.fmt_path))[0]
-                if "-" in fmt_filename:
-                    partname_count = int(fmt_filename.split("-")[1]) - 1
-                    # print("import partname count: " + str(partname_count))
+                if " " in mbf.mesh_name:
+                    partname_count = int(mbf.mesh_name.split(" ")[1])
+                    print("import partname count: " + str(partname_count))
                     component = extracted_object.components[partname_count]
 
         MeshImportUtils.import_vertex_groups(mesh, obj, blend_indices, blend_weights, component)

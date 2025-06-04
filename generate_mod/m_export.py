@@ -32,14 +32,16 @@ def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):
 
     # 因为只有存在TANGENT时，顶点数才会增加，所以如果是GF2并且存在TANGENT才使用共享TANGENT防止增加顶点数
     if "TANGENT" in buffer_model.d3d11GameType.OrderedFullElementList and GlobalConfig.gamename == "GF2":
-        ib, category_buffer_dict = buffer_model.calc_index_vertex_buffer_girlsfrontline2(obj, mesh)
-        return ib, category_buffer_dict
-    
+        ib, category_buffer_dict,indexed_vertices = buffer_model.calc_index_vertex_buffer_girlsfrontline2(obj, mesh)
+        return ib, category_buffer_dict,indexed_vertices
+    elif GlobalConfig.gamename == "WWMI":
+        ib, category_buffer_dict,index_vertex_id_dict = buffer_model.calc_index_vertex_buffer_wwmi(obj, mesh)
+        return ib, category_buffer_dict,index_vertex_id_dict
     else:
         # 计算IndexBuffer和CategoryBufferDict
-        ib, category_buffer_dict = buffer_model.calc_index_vertex_buffer(obj, mesh)
+        ib, category_buffer_dict,indexed_vertices = buffer_model.calc_index_vertex_buffer(obj, mesh)
 
-        return ib, category_buffer_dict
+        return ib, category_buffer_dict,indexed_vertices
 
 
 

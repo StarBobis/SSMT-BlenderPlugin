@@ -240,6 +240,12 @@ class ShapeKeyUtils:
         data_source.foreach_get(data_name, result.ravel())
         return result
     
+
+    @classmethod
+    def sanitize_blender_data(cls, arr: numpy.ndarray):
+        if numpy.issubdtype(arr.dtype, numpy.floating):
+            numpy.nan_to_num(arr, copy=False)
+
     @classmethod
     def get_shapekey_data(cls, 
                           obj: bpy.types.Object, 
@@ -264,6 +270,7 @@ class ShapeKeyUtils:
                 continue
 
             data = cls.fetch_data(shapekey.data, 'co', numpy_type)
+            cls.sanitize_blender_data(data)
 
             if deduct_basis:
                 data -= base_data
