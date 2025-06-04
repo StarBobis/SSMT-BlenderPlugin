@@ -147,7 +147,7 @@ class GenerateModWWMI(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModelWWMI(draw_ib_collection,True)
+            draw_ib_model = DrawIBModelWWMI(draw_ib_collection)
             M_WWMIIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod

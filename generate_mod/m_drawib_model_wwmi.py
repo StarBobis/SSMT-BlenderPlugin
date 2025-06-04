@@ -22,118 +22,12 @@ from ..utils.obj_utils import ExtractedObject, ExtractedObjectHelper
 import re
 import bpy
 
-from typing import List, Dict, Union
-from dataclasses import dataclass, field
-from enum import Enum
-from dataclasses import dataclass
-
-import bpy
-import bmesh
-
-
-class ShapeKeyHelper:
-    @classmethod
-    def extract_shapekey_data(cls,merged_obj,index_vertex_id_dict):
-        '''
-        传入MergedObj，提取出其形态键数据
-
-        TODO 3.31秒？什么玩意这么吃性能呢？
-        我们后面再优化速度，主要是得先把流程走通。
-
-        '''
-        TimerUtils.Start("process shapekey data")
-
-        shapekey_offsets = []
-        shapekey_vertex_ids = []
-        shapekey_vertex_offsets = []
-
-        obj = merged_obj
-        obj_name = obj.name
-        mesh = obj.data
-
-        
-        # 如果这个obj的mesh没有形态键，那就直接跳过不处理
-        mesh_shapekeys = mesh.shape_keys
-        if mesh_shapekeys is None:
-            print("obj: " + obj_name + " 不含有形态键，跳过处理")
-            return None, None, None
-
-        shapekey_index_list = []
-        shapekey_data = {}
-
-        base_data = mesh_shapekeys.key_blocks['Basis'].data
-        for shapekey in mesh_shapekeys.key_blocks:
-            # 截取形态键名称中的形态键shapekey_id，获取不到就跳过
-            shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
-            match = shapekey_pattern.findall(shapekey.name.lower())
-            if len(match) == 0:
-                print("当前形态键名称:" +shapekey.name + " 不是以Deform开头的，进行跳过")
-                continue
-
-            shapekey_index = int(match[0])
-
-            # 因为WWMI的形态键数量只有128个，这里shapekey_id是从0开始的，所以到127结束，所以不能大于等于128
-            if shapekey_index >= 128:
-                break
-
-            if shapekey_index not in shapekey_index_list:
-                shapekey_index_list.append(shapekey_index)
-
-            # 对于这个obj的每个顶点，我们都要尝试从当前shapekey中获取数据，如果获取到了，就放入缓存
-            for vertex_index in range(len(mesh.vertices)):
-                base_vertex_coords = base_data[vertex_index].co
-                shapekey_vertex_coords = shapekey.data[vertex_index].co
-                vertex_offset = shapekey_vertex_coords - base_vertex_coords
-                # 到这里已经有vertex_id、shapekey_id、vertex_offset了，就不用像WWMI一样再从缓存读取了
-                offseted_vertex_index = vertex_index 
-
-                if offseted_vertex_index not in shapekey_data:
-                    shapekey_data[offseted_vertex_index] = {}
-
-                # 如果相差太小，说明无效或者是一样的，说明这个顶点没有ShapeKey，此时向ShapeKeyOffsets中添加空的0
-                if vertex_offset.length < 0.000000001:
-                    # print("相差太小，跳过处理。")
-                    continue
-                
-                # 此时如果能获取到，说明有效，此时可以直接放入准备好的字典
-                shapekey_data[offseted_vertex_index][shapekey_index] = list(vertex_offset)
-
-        # 转换格式问题
-        shapekey_cache = {shapekey_id:{} for shapekey_id in shapekey_index_list}
-
-        # 获取当前obj每个Index对应的VertexId
-        for index_id,vertex_id in index_vertex_id_dict.items():
-            # 这样VertexId加上全局偏移，就能获取到对应位置的形态键数据：
-            vertex_shapekey_data = shapekey_data.get(vertex_id, None)
-            if vertex_shapekey_data is not None:
-                for shapekey_index,vertex_offsets in vertex_shapekey_data.items():
-                    # 然后这里IndexId加上全局IndexId偏移，就得到了obj整体的IndexId，存到对应的ShapeKeyIndex上面
-                    shapekey_cache[shapekey_index][index_id] = vertex_offsets
-
-        # 从0到128去获取ShapeKey的Index，有就直接加到
-        shapekey_verts_count = 0
-        for group_id in range(128):
-            shapekey = shapekey_cache.get(group_id, None)
-            if shapekey is None or len(shapekey_cache[group_id]) == 0:
-                shapekey_offsets.extend([shapekey_verts_count if shapekey_verts_count != 0 else 0])
-                continue
-
-            shapekey_offsets.extend([shapekey_verts_count])
-
-            for draw_index, vertex_offsets in shapekey.items():
-                shapekey_vertex_ids.extend([draw_index])
-                shapekey_vertex_offsets.extend(vertex_offsets + [0, 0, 0])
-                shapekey_verts_count += 1
-
-        TimerUtils.End("process shapekey data") 
-        return shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets
-
 
 class DrawIBModelWWMI:
     '''
     注意，单个IB的WWMI架构必定存在135W顶点索引的数量上限
     '''
-    def __init__(self,draw_ib_collection,merge_objects:bool):
+    def __init__(self,draw_ib_collection):
         '''
         根据3Dmigoto的架构设计，每个DrawIB都是一个独立的Mod
         '''
@@ -173,13 +67,12 @@ class DrawIBModelWWMI:
                 draw_indexed_obj.AliasName = comp_obj.name
                 self.obj_name_drawindexed_dict[comp_obj.name] = draw_indexed_obj
 
-        # (98) 选中当前融合的obj对象，计算得到ib和category_buffer，以及每个IndexId对应的VertexId
+        # (8) 选中当前融合的obj对象，计算得到ib和category_buffer，以及每个IndexId对应的VertexId
         merged_obj = self.merged_object.object
         bpy.context.view_layer.objects.active = merged_obj
         
         ib, category_buffer_dict,index_vertex_id_dict = get_buffer_ib_vb_fast(self.d3d11GameType)
         
-
         # (9) 构建每个Category的VertexBuffer，每个Category都生成一个CategoryBuffer文件。
         self.__categoryname_bytelist_dict = {} 
         for category_name in self.d3d11GameType.OrderedCategoryNameList:
@@ -204,31 +97,17 @@ class DrawIBModelWWMI:
         position_bytelength = len(self.__categoryname_bytelist_dict["Position"])
         self.draw_number = int(position_bytelength/position_stride)
 
-        # (11) 拼接ShapeKey数据
-        if merged_obj.data.shape_keys is None or len(getattr(merged_obj.data.shape_keys, 'key_blocks', [])) == 0:
-            print(f'No shapekeys found to process!')
-            self.shapekey_offsets = []
-            self.shapekey_vertex_ids = []
-            self.shapekey_vertex_offsets = []
-        else:
-            shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets_np = ShapeKeyHelper.extract_shapekey_data(merged_obj=merged_obj,index_vertex_id_dict=index_vertex_id_dict)
 
-            self.shapekey_offsets = shapekey_offsets
-            self.shapekey_vertex_ids = shapekey_vertex_ids
-            self.shapekey_vertex_offsets = shapekey_vertex_offsets_np
-
-        bpy.data.objects.remove(merged_obj, do_unlink=True)
-
-        # (12) 导出Buffer文件，Export Index Buffer files, Category Buffer files. (And Export ShapeKey Buffer Files.(WWMI))
-        # 用于写出IB时使用
-        # 拼接每个PartName对应的IB文件的Resource和filename,这样生成ini的时候以及导出Mod的时候就可以直接使用了。
-        style_part_name = "Component1"
-        ib_buf_filename = self.draw_ib + "-" + style_part_name + ".buf"
-
-        # 导出当前Mod的所有Buffer文件
+        
         buf_output_folder = GlobalConfig.path_generatemod_buffer_folder(draw_ib=self.draw_ib)
+        # (10) 写出临时融合的obj对象的shapekey数据到Buffer文件中
+        self.write_out_shapekey_buffer(merged_obj=merged_obj,
+                                       index_vertex_id_dict=index_vertex_id_dict,
+                                       buf_output_folder=buf_output_folder)
+
+        # (11) 导出Buffer文件，Export Index Buffer files, Category Buffer files. 
         packed_data = struct.pack(f'<{len(ib)}I', *ib)
-        with open(buf_output_folder + ib_buf_filename, 'wb') as ibf:
+        with open(buf_output_folder + self.draw_ib + "-Component1.buf", 'wb') as ibf:
             ibf.write(packed_data) 
             
         for category_name, category_buf in self.__categoryname_bytelist_dict.items():
@@ -237,27 +116,45 @@ class DrawIBModelWWMI:
             # category_array = numpy.array(category_buf, dtype=numpy.uint8)
             with open(buf_path, 'wb') as ibf:
                 category_buf.tofile(ibf)
-
-        # 鸣潮的ShapeKey三个Buffer的导出
-        if len(self.shapekey_offsets) != 0:
-            with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyOffset.buf", 'wb') as file:
-                for number in self.shapekey_offsets:
-                    # 假设数字是32位整数，使用'i'格式符
-                    # 根据实际需要调整数字格式和相应的格式符
-                    data = struct.pack('i', number)
-                    file.write(data)
         
-        if len(self.shapekey_vertex_ids) != 0:
-            with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyVertexId.buf", 'wb') as file:
-                for number in self.shapekey_vertex_ids:
-                    # 假设数字是32位整数，使用'i'格式符
-                    # 根据实际需要调整数字格式和相应的格式符
-                    data = struct.pack('i', number)
-                    file.write(data)
-        
-        if len(self.shapekey_vertex_offsets) != 0:
-            # 将列表转换为numpy数组，并改变其数据类型为float16
-            float_array = numpy.array(self.shapekey_vertex_offsets, dtype=numpy.float32).astype(numpy.float16)
-            with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyVertexOffset.buf", 'wb') as file:
-                float_array.tofile(file)
+        # (12) 删除临时融合的obj对象
+        bpy.data.objects.remove(merged_obj, do_unlink=True)
 
+
+    def write_out_shapekey_buffer(self,merged_obj,index_vertex_id_dict,buf_output_folder):
+        self.shapekey_offsets = []
+        self.shapekey_vertex_ids = []
+        self.shapekey_vertex_offsets = []
+
+        # (11) 拼接ShapeKey数据
+        if merged_obj.data.shape_keys is None or len(getattr(merged_obj.data.shape_keys, 'key_blocks', [])) == 0:
+            print(f'No shapekeys found to process!')
+        else:
+            shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets_np = ShapeKeyUtils.extract_shapekey_data_very_very_very_slow(merged_obj=merged_obj,index_vertex_id_dict=index_vertex_id_dict)
+
+            self.shapekey_offsets = shapekey_offsets
+            self.shapekey_vertex_ids = shapekey_vertex_ids
+            self.shapekey_vertex_offsets = shapekey_vertex_offsets_np
+
+            # 鸣潮的ShapeKey三个Buffer的导出
+            if len(self.shapekey_offsets) != 0:
+                with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyOffset.buf", 'wb') as file:
+                    for number in self.shapekey_offsets:
+                        # 假设数字是32位整数，使用'i'格式符
+                        # 根据实际需要调整数字格式和相应的格式符
+                        data = struct.pack('i', number)
+                        file.write(data)
+            
+            if len(self.shapekey_vertex_ids) != 0:
+                with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyVertexId.buf", 'wb') as file:
+                    for number in self.shapekey_vertex_ids:
+                        # 假设数字是32位整数，使用'i'格式符
+                        # 根据实际需要调整数字格式和相应的格式符
+                        data = struct.pack('i', number)
+                        file.write(data)
+            
+            if len(self.shapekey_vertex_offsets) != 0:
+                # 将列表转换为numpy数组，并改变其数据类型为float16
+                float_array = numpy.array(self.shapekey_vertex_offsets, dtype=numpy.float32).astype(numpy.float16)
+                with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyVertexOffset.buf", 'wb') as file:
+                    float_array.tofile(file)
