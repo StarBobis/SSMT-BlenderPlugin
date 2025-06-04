@@ -8,9 +8,12 @@ from ..utils.timer_utils import *
 
 from typing import List, Dict, Union
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
+
 from ..utils.migoto_utils import *
 
+from .migoto_binary_file import D3D11Element
+
+from dataclasses import dataclass, field, asdict
 
 class M_DrawIndexed:
     def __init__(self) -> None:
@@ -29,129 +32,6 @@ class M_DrawIndexed:
     
     def get_draw_str(self) ->str:
         return "drawindexed = " + self.DrawNumber + "," + self.DrawOffsetIndex +  "," + self.DrawStartIndex
-
-
-@dataclass
-class D3D11Element:
-    SemanticName:str
-    SemanticIndex:int
-    Format:str
-    ByteWidth:int
-    # Which type of slot and slot number it use? eg:vb0
-    ExtractSlot:str
-    # Is it from pointlist or trianglelist or compute shader?
-    ExtractTechnique:str
-    # Human named category, also will be the buf file name suffix.
-    Category:str
-
-    # Fixed items
-    InputSlot:str = field(default="0", init=False, repr=False)
-    InputSlotClass:str = field(default="per-vertex", init=False, repr=False)
-    InstanceDataStepRate:str = field(default="0", init=False, repr=False)
-
-    # Generated Items
-    ElementNumber:int = field(init=False,default=0)
-    AlignedByteOffset:int
-    ElementName:str = field(init=False,default="")
-
-    def __post_init__(self):
-        self.ElementName = self.get_indexed_semantic_name()
-
-    def get_indexed_semantic_name(self)->str:
-        if self.SemanticIndex == 0:
-            return self.SemanticName
-        else:
-            return self.SemanticName + str(self.SemanticIndex)
-
-
-class FMTFile:
-    def __init__(self, filename):
-        self.stride = 0
-        self.topology = ""
-        self.format = ""
-        self.gametypename = ""
-        self.prefix = ""
-        self.scale = "1.0"
-        self.rotate_angle:bool = False
-        self.rotate_angle_x:float = 0
-        self.rotate_angle_y:float = 0
-        self.rotate_angle_z:float = 0
-
-        self.elements:list[D3D11Element] = []
-
-        with open(filename, 'r') as file:
-            lines = file.readlines()
-
-        element_info = {}
-        for line in lines:
-            parts = line.strip().split(":")
-            if len(parts) < 2:
-                continue  # 跳过格式不正确的行
-
-            key, value = parts[0].strip(), ":".join(parts[1:]).strip()
-            if key == "stride":
-                self.stride = int(value)
-            elif key == "topology":
-                self.topology = value
-            elif key == "format":
-                self.format = value
-            elif key == "gametypename":
-                self.gametypename = value
-            elif key == "prefix":
-                self.prefix = value
-            elif key == "scale":
-                self.scale = value
-            elif key == "rotate_angle":
-                self.rotate_angle = value.lower() == "true"
-            elif key == "rotate_angle_x":
-                self.rotate_angle_x = float(value)
-            elif key == "rotate_angle_y":
-                self.rotate_angle_y = float(value)
-            elif key == "rotate_angle_z":
-                self.rotate_angle_z = float(value)
-            elif key.startswith("element"):
-                # 处理element块
-                if "SemanticName" in element_info:
-                    # 如果已经有一个element信息，则先添加到列表中
-                    self.elements.append(D3D11Element(
-                          SemanticName=element_info["SemanticName"], SemanticIndex=int(element_info["SemanticIndex"]),
-                    Format= element_info["Format"],AlignedByteOffset= int(element_info["AlignedByteOffset"]),
-                    ByteWidth=MigotoUtils.format_size(element_info["Format"]),
-                    ExtractSlot="0",ExtractTechnique="",Category=""
-                    ))
-                    element_info.clear()  # 清空当前element信息
-
-                # 将新的element属性添加到element_info字典中
-                element_info[key.split()[0]] = value
-            elif key in ["SemanticName", "SemanticIndex", "Format", "InputSlot", "AlignedByteOffset", "InputSlotClass", "InstanceDataStepRate"]:
-                element_info[key] = value
-
-        # 添加最后一个element
-        if "SemanticName" in element_info:
-            self.elements.append(D3D11Element(
-                    SemanticName=element_info["SemanticName"], SemanticIndex=int(element_info["SemanticIndex"]),
-                    Format= element_info["Format"],AlignedByteOffset= int(element_info["AlignedByteOffset"]),
-                    ByteWidth=MigotoUtils.format_size(element_info["Format"]),
-                    ExtractSlot="0",ExtractTechnique="",Category=""
-            ))
-
-    def __repr__(self):
-        return (f"FMTFile(stride={self.stride}, topology='{self.topology}', format='{self.format}', "
-                f"gametypename='{self.gametypename}', prefix='{self.prefix}', elements={self.elements})")
-    
-    def get_dtype(self):
-        fields = []
-        for elemnt in self.elements:
-            # print("element: "+ elemnt.ElementName)
-            numpy_type = MigotoUtils.get_nptype_from_format(elemnt.Format)
-            size = MigotoUtils.format_components(elemnt.Format)
-
-            # print(numpy_type)
-            # print(size)
-
-            fields.append((elemnt.ElementName,numpy_type , size))
-        dtype = numpy.dtype(fields)
-        return dtype
 
 
 # Designed to read from json file for game type config
