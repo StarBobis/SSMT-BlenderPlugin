@@ -93,6 +93,11 @@ class MeshImportUtils:
                     normals = [(x[0] * 2 - 1, x[1] * 2 - 1, x[2] * 2 - 1) for x in data]
                 else:
                     normals = [(x[0], x[1], x[2]) for x in data]
+                
+                # 一般只有WWMI的会触发这个
+                if mbf.fmt_file.flip_normal:
+                    # 如果fmt文件设置了flip_normal，则需要翻转法线
+                    normals = [(-x[0], -x[1], -x[2]) for x in normals]
 
             elif element.SemanticName == "TANGENT":
                 pass
@@ -160,7 +165,6 @@ class MeshImportUtils:
         # TODO 这里每个游戏的属性都不一样，后面拆分为不同游戏的流程。
         obj["3DMigoto:RecalculateTANGENT"] = False
         obj["3DMigoto:RecalculateCOLOR"] = False
-
         # 设置GameTypeName，方便在Catter的Properties面板中查看
         obj['3DMigoto:GameTypeName'] = mbf.fmt_file.gametypename
 

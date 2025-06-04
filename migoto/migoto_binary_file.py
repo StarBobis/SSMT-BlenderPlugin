@@ -50,6 +50,7 @@ class FMTFile:
         self.rotate_angle_x:float = 0
         self.rotate_angle_y:float = 0
         self.rotate_angle_z:float = 0
+        self.flip_normal:bool = False
 
         self.elements:list[D3D11Element] = []
 
@@ -83,6 +84,10 @@ class FMTFile:
                 self.rotate_angle_y = float(value)
             elif key == "rotate_angle_z":
                 self.rotate_angle_z = float(value)
+
+            elif key == "flip_normal":
+                self.flip_normal = value.lower() == "true"
+                
             elif key.startswith("element"):
                 # 处理element块
                 if "SemanticName" in element_info:

@@ -20,10 +20,6 @@ from .mesh_import_utils import MeshImportUtils
 from .migoto_binary_file import MigotoBinaryFile, FMTFile
 
 
-
-
-
-
 def ImprotFromWorkSpace(self, context):
     import_drawib_aliasname_folder_path_dict = ConfigUtils.get_import_drawib_aliasname_folder_path_dict_with_first_match_type()
     print(import_drawib_aliasname_folder_path_dict)
