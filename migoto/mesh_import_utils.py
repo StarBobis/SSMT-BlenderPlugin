@@ -35,16 +35,8 @@ class MeshImportUtils:
         mesh = bpy.data.meshes.new(mbf.mesh_name)
         obj = bpy.data.objects.new(mesh.name, mesh)
 
-        # 虽然每个游戏导入时的坐标不一致，导致模型朝向都不同，但是不在这里修改，而是在后面根据具体的游戏进行扶正
-        obj.matrix_world = axis_conversion(from_forward='-Z', from_up='Y').to_4x4()
-
-        # 设置默认不重计算TANGNET和COLOR
-        # TODO 这里每个游戏的属性都不一样，后面拆分为不同游戏的流程。
-        obj["3DMigoto:RecalculateTANGENT"] = False
-        obj["3DMigoto:RecalculateCOLOR"] = False
-
-        # 设置GameTypeName，方便在Catter的Properties面板中查看
-        obj['3DMigoto:GameTypeName'] = mbf.fmt_file.gametypename
+        MeshImportUtils.set_import_coordinate(obj=obj)
+        MeshImportUtils.set_import_attributes(obj=obj, mbf=mbf)
 
         MeshImportUtils.initialize_mesh(mesh, mbf)
 
@@ -149,6 +141,7 @@ class MeshImportUtils:
             mesh.normals_split_custom_set_from_vertices(normals)
             mesh.calc_tangents()
 
+        
         MeshImportUtils.create_bsdf_with_diffuse_linked(obj, mesh_name=mbf.mesh_name,directory=os.path.dirname(mbf.fmt_path))
         MeshImportUtils.set_import_rotate_angle(obj=obj, mbf=mbf)
         MeshImportUtils.set_import_scale(obj=obj, mbf=mbf)
@@ -157,6 +150,27 @@ class MeshImportUtils:
         TimerUtils.End("Import 3Dmigoto Raw")
 
         return obj
+    
+    @classmethod
+    def set_import_attributes(cls, obj, mbf:MigotoBinaryFile):
+        '''
+        设置导入时的初始属性
+        '''
+        # 设置默认不重计算TANGNET和COLOR
+        # TODO 这里每个游戏的属性都不一样，后面拆分为不同游戏的流程。
+        obj["3DMigoto:RecalculateTANGENT"] = False
+        obj["3DMigoto:RecalculateCOLOR"] = False
+
+        # 设置GameTypeName，方便在Catter的Properties面板中查看
+        obj['3DMigoto:GameTypeName'] = mbf.fmt_file.gametypename
+
+
+    @classmethod
+    def set_import_coordinate(cls,obj):
+        '''
+        虽然每个游戏导入时的坐标不一致，导致模型朝向都不同，但是不在这里修改，而是在后面根据具体的游戏进行扶正
+        '''
+        obj.matrix_world = axis_conversion(from_forward='-Z', from_up='Y').to_4x4()
 
 
     @classmethod

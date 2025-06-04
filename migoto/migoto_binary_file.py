@@ -201,7 +201,7 @@ class MigotoBinaryFile:
 
     def file_size_check(self) -> bool:
         '''
-        检查.ib和.vb文件是否为空，如果为空则弹出错误。
+        检查.ib和.vb文件是否为空，如果为空则弹出错误提醒信息，但不报错。
         '''
         # 如果vb和ib文件不存在，则跳过导入
         # 我们不能直接抛出异常，因为有些.ib文件是空的占位文件
