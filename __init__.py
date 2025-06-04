@@ -21,7 +21,7 @@ bl_info = {
     "name": "SSMT",
     "description": "Super Simple Migoto Tool",
     "blender": (3, 6, 0),
-    "version": (1, 3, 5),
+    "version": (1, 3, 6),
     "location": "View3D",
     "category": "Generic"
 }
@@ -73,6 +73,7 @@ register_classes = (
     # 集合的右键菜单栏
     Catter_MarkCollection_Switch,
     Catter_MarkCollection_Toggle,
+    SSMT_LinkObjectsToCollection,
 
     # UI
     MigotoAttributePanel,
