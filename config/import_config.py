@@ -3,16 +3,10 @@ import os
 
 from .main_config import GlobalConfig
 from ..utils.json_utils import JsonUtils
-from ..migoto.migoto_format import D3D11GameType, Fatal
+from ..migoto.migoto_format import D3D11GameType, TextureReplace
+from ..utils.migoto_utils import Fatal
 
 
-
-class TextureReplace:
-    def  __init__(self):
-        self.resource_name = ""
-        self.filter_index = 0
-        self.hash = ""
-        self.style = ""
 
 class ImportConfig:
     '''

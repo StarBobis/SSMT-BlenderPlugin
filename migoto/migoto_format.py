@@ -33,6 +33,12 @@ class M_DrawIndexed:
     def get_draw_str(self) ->str:
         return "drawindexed = " + self.DrawNumber + "," + self.DrawOffsetIndex +  "," + self.DrawStartIndex
 
+class TextureReplace:
+    def  __init__(self):
+        self.resource_name = ""
+        self.filter_index = 0
+        self.hash = ""
+        self.style = ""
 
 # Designed to read from json file for game type config
 @dataclass

@@ -21,7 +21,6 @@ class GlobalConfig:
     dbmtlocation = ""
     current_game_migoto_folder = ""
 
-    # TODO 移除这个设计，因为必须精确到具体游戏。
     @classmethod
     def get_game_category(cls) -> str:
         if cls.gamename in ["GI","HI3","ZZZ","BloodySpell","GF2","IdentityV"]:
@@ -58,8 +57,6 @@ class GlobalConfig:
         # 保存到文件
         with open(config_path, 'w') as file:
             file.write(json_data)
-
-
 
     @classmethod
     def read_from_main_json(cls) :

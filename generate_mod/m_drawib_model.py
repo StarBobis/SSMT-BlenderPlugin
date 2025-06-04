@@ -14,22 +14,7 @@ from ..utils.migoto_utils import Fatal
 from ..utils.obj_utils import ObjUtils
 
 from ..utils.obj_utils import ExtractedObject, ExtractedObjectHelper
-from ..migoto.migoto_format import M_DrawIndexed
-
-
-class TextureReplace:
-    def  __init__(self):
-        self.resource_name = ""
-        self.filter_index = 0
-        self.hash = ""
-        self.style = ""
-        
-
-class ModelCollection:
-    def __init__(self):
-        self.type = ""
-        self.model_collection_name = ""
-        self.obj_name_list = []
+from ..migoto.migoto_format import M_DrawIndexed, TextureReplace
 
 
 # 这个代表了一个DrawIB的Mod导出模型
@@ -69,7 +54,6 @@ class DrawIBModel:
         self.__obj_name_ib_dict:dict[str,list] = {} 
         self.__obj_name_category_buffer_list_dict:dict[str,list] =  {} 
         self.obj_name_drawindexed_dict:dict[str,M_DrawIndexed] = {} # 给每个obj的属性统计好，后面就能直接用了。
-        self.__obj_name_index_vertex_id_dict:dict[str,dict] = {} # 形态键功能必备
         self.componentname_ibbuf_dict = {} # 每个Component都生成一个IndexBuffer文件，或者所有Component共用一个IB文件。
         self.__categoryname_bytelist_dict = {} # 每个Category都生成一个CategoryBuffer文件。
 
@@ -242,11 +226,9 @@ class DrawIBModel:
                             ObjUtils.normalize_all(obj)
 
                     ib, category_buffer_dict,indexed_vertices = get_buffer_ib_vb_fast(self.d3d11GameType)
-                    # self.__obj_name_index_vertex_id_dict[obj_name] = index_vertex_id_dict
                     
                     self.__obj_name_ib_dict[obj.name] = ib
                     self.__obj_name_category_buffer_list_dict[obj.name] = category_buffer_dict
-                    # self.__obj_name_index_vertex_id_dict[obj.name] = index_vertex_id_dict
 
 
     def __read_component_ib_buf_dict_merged(self):

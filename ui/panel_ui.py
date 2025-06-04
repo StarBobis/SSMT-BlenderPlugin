@@ -151,8 +151,8 @@ class PanelModelImportConfig(bpy.types.Panel):
         layout.prop(context.scene.properties_import_model,"model_scale",text="模型导入大小比例")
         layout.prop(context.scene.properties_import_model,"import_flip_scale_x",text="设置Scale的X分量为-1避免模型镜像")
         layout.prop(context.scene.properties_import_model,"import_flip_scale_y",text="设置Scale的Y分量为-1来改变模型朝向")
-
-        if GlobalConfig.get_game_category() == GameCategory.UnrealVS or GlobalConfig.get_game_category() == GameCategory.UnrealCS:
+    
+        if GlobalConfig.gamename == "WWMI":
             layout.prop(context.scene.properties_wwmi,"import_merged_vgmap",text="使用融合统一顶点组")
 
 
@@ -189,8 +189,6 @@ class PanelGenerateModConfig(bpy.types.Panel):
         elif GlobalConfig.get_game_category() == GameCategory.UnrealVS or GlobalConfig.get_game_category() == GameCategory.UnrealCS:
             layout.prop(context.scene.properties_wwmi, "ignore_muted_shape_keys")
             layout.prop(context.scene.properties_wwmi, "apply_all_modifiers")
-
-
     
 
 class PanelButtons(bpy.types.Panel):
