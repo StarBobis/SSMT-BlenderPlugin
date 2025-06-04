@@ -167,6 +167,9 @@ class BufferModel:
                     result[2::4] = normals[2::3]
                     result = result.reshape(-1, 4)
                     
+                    if GlobalConfig.gamename == "YYSLS":
+                        result *= -1
+
                     # 归一化 (此处感谢 球球 的代码开发)
                     def DeConvert(nor):
                         return (nor + 1) * 0.5
@@ -263,9 +266,9 @@ class BufferModel:
                 mesh_loops.foreach_get("bitangent", binormals)
                 # 将切线分量放置到输出数组中
                 # BINORMAL全部翻转即可得到和YYSLS游戏中一样的效果。
-                result[0::4] = binormals[0::3] * -1 # x 分量
-                result[1::4] = binormals[1::3] * -1  # y 分量
-                result[2::4] = binormals[2::3] * -1 # z 分量
+                result[0::4] = binormals[0::3]  # x 分量
+                result[1::4] = binormals[1::3]   # y 分量
+                result[2::4] = binormals[2::3]  # z 分量
                 binormal_w = numpy.ones(mesh_loops_length, dtype=numpy.float32)
                 result[3::4] = binormal_w
                 result = result.reshape(-1, 4)
