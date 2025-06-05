@@ -368,7 +368,6 @@ class BufferModel:
         效率比下面的低50%，不过能使用这个选项的场景只有导入直接导出原模型，所以总运行时间基本都在0.4秒以内，用户感觉不到差距的，没问题。
         '''
         # 创建一个空列表用于存储最终的结果
-        index_vertex_id_dict = {}
         ib = []
         indexed_vertices = collections.OrderedDict()
         # 一个字典确保每个符合条件的position只出现过一次
@@ -392,7 +391,6 @@ class BufferModel:
                 vertex_data = vertex_data_get.tobytes()
                 index = indexed_vertices.setdefault(vertex_data, len(indexed_vertices))
                 vertex_indices.append(index)
-                index_vertex_id_dict[index] = blender_lvertex.vertex_index
             
             # 将当前多边形的顶点索引列表添加到最终结果列表中
             ib.append(vertex_indices)
@@ -416,7 +414,7 @@ class BufferModel:
             category_buffer_dict[categoryname] = data_matrix[:,stride_offset:stride_offset + category_stride].flatten()
             stride_offset += category_stride
 
-        return flattened_ib,category_buffer_dict,index_vertex_id_dict
+        return flattened_ib,category_buffer_dict
 
     def calc_index_vertex_buffer_wwmi(self,obj,mesh:bpy.types.Mesh):
         '''
@@ -471,7 +469,7 @@ class BufferModel:
 
         return flattened_ib,category_buffer_dict,index_vertex_id_dict
 
-    def calc_index_vertex_buffer(self,obj,mesh:bpy.types.Mesh):
+    def calc_index_vertex_buffer_universal(self,obj,mesh:bpy.types.Mesh):
         '''
         计算IndexBuffer和CategoryBufferDict并返回
 
@@ -514,4 +512,4 @@ class BufferModel:
             category_buffer_dict[categoryname] = data_matrix[:,stride_offset:stride_offset + category_stride].flatten()
             stride_offset += category_stride
 
-        return flattened_ib,category_buffer_dict,indexed_vertices
+        return flattened_ib,category_buffer_dict

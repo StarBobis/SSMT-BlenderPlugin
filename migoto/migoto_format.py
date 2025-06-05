@@ -40,6 +40,13 @@ class TextureReplace:
         self.hash = ""
         self.style = ""
 
+class ObjModel:
+    def __init__(self):
+        self.ib = []
+        self.category_buffer_dict = {}
+        self.index_vertex_id_dict = {} # 仅用于WWMI的索引顶点ID字典，key是顶点索引，value是顶点ID，默认可以为None
+        self.obj_name = ""
+
 # Designed to read from json file for game type config
 @dataclass
 class D3D11GameType:

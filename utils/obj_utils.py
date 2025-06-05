@@ -677,9 +677,17 @@ class ObjUtils:
         # 这里是获取所有的obj，需要用咱们的方法来进行集合架构的遍历获取所有的obj
         componentname_modelcollection_list_dict:dict[str,list[ModelCollection]] = CollectionUtils.parse_drawib_collection_architecture(draw_ib_collection=draw_ib_collection)
 
+        # Nico: 添加缓存机制，一个obj只处理一次
+        processed_obj_name_list:list[str] = []
+
         for component_name,model_collection_list in componentname_modelcollection_list_dict.items():
             for model_collection in model_collection_list:
                 for obj_name in model_collection.obj_name_list:
+                    # Nico: 如果已经处理过这个obj，则跳过
+                    if obj_name in processed_obj_name_list:
+                        continue
+                    processed_obj_name_list.append(obj_name)
+
                     obj = bpy.data.objects.get(obj_name)
                     # 跳过不满足component开头的对象
 
