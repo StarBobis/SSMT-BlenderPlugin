@@ -52,11 +52,11 @@ class M_HSRIniModel:
         if d3d11GameType.GPU_PreSkinning:
             vertexlimit_section = M_IniSection(M_SectionType.TextureOverrideVertexLimitRaise)
 
-            vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_VertexLimitRaise" + "]")
+            vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_LimitDraw" + "]")
             vertexlimit_section.append("hash = " + draw_ib_model.vertex_limit_hash)
 
-            vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
-            vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+            vertexlimit_section.append("; override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
+            vertexlimit_section.append("; override_vertex_count = " + str(draw_ib_model.draw_number))
 
             # TODO 处理多个IB在同一ini中的问题。
             vertexlimit_section.append("if DRAW_TYPE != 8 && DRAW_TYPE != 1 && $_blend_ > 0")

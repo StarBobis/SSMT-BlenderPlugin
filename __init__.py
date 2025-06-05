@@ -21,7 +21,7 @@ bl_info = {
     "name": "SSMT",
     "description": "Super Simple Migoto Tool",
     "blender": (3, 6, 0),
-    "version": (1, 3, 7),
+    "version": (1, 3, 8),
     "location": "View3D",
     "category": "Generic"
 }
