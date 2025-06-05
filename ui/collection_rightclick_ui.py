@@ -89,3 +89,24 @@ def menu_dbmt_mark_collection_switch(self, context):
     self.layout.operator(Catter_MarkCollection_Switch.bl_idname)
     self.layout.operator(SSMT_LinkObjectsToCollection.bl_idname)
     self.layout.operator(SSMT_UnlinkObjectsFromCollection.bl_idname)
+
+
+class PanelCollectionFunction(bpy.types.Panel):
+    '''
+    集合的右键菜单的UI面板，相比于默认的右键菜单更省事儿
+    '''
+    bl_label = "集合操作" 
+    bl_idname = "VIEW3D_PT_SSMT_CollectionFunction_Panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'SSMT'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        self.layout.separator()
+        layout.operator(Catter_MarkCollection_Toggle.bl_idname)
+        layout.operator(Catter_MarkCollection_Switch.bl_idname)
+        layout.operator(SSMT_LinkObjectsToCollection.bl_idname)
+        layout.operator(SSMT_UnlinkObjectsFromCollection.bl_idname)

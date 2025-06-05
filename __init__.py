@@ -21,7 +21,7 @@ bl_info = {
     "name": "SSMT",
     "description": "Super Simple Migoto Tool",
     "blender": (3, 6, 0),
-    "version": (1, 3, 6),
+    "version": (1, 3, 7),
     "location": "View3D",
     "category": "Generic"
 }
@@ -81,6 +81,7 @@ register_classes = (
     PanelGenerateModConfig,
     PanelButtons,
     # UpdaterPanel,
+    PanelCollectionFunction,
     PanelModelProcess,
 
     ExtractSubmeshOperator,
