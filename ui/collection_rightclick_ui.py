@@ -105,7 +105,6 @@ class PanelCollectionFunction(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        self.layout.separator()
         layout.operator(Catter_MarkCollection_Toggle.bl_idname)
         layout.operator(Catter_MarkCollection_Switch.bl_idname)
         layout.operator(SSMT_LinkObjectsToCollection.bl_idname)

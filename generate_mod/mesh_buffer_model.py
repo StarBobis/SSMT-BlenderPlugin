@@ -2,7 +2,7 @@ import bpy
 import numpy
 import collections
 
-from ..migoto.migoto_format import D3D11GameType
+from ..migoto.migoto_format import D3D11GameType,ObjModel
 from .mesh_data import MeshData
 from .mesh_format_converter import MeshFormatConverter
 from ..utils.migoto_utils import MigotoUtils, Fatal
@@ -352,7 +352,7 @@ class BufferModel:
                     # print("BLENDWEIGHT R8G8B8A8_UNORM")
                     self.element_vertex_ndarray[d3d11_element_name] = MeshFormatConverter.convert_4x_float32_to_r8g8b8a8_unorm_blendweights(blendweights)
 
-    def calc_index_vertex_buffer_girlsfrontline2(self,obj,mesh:bpy.types.Mesh):
+    def calc_index_vertex_buffer_girlsfrontline2(self,obj,mesh:bpy.types.Mesh)->ObjModel:
         '''
         计算IndexBuffer和CategoryBufferDict并返回
 
@@ -414,9 +414,13 @@ class BufferModel:
             category_buffer_dict[categoryname] = data_matrix[:,stride_offset:stride_offset + category_stride].flatten()
             stride_offset += category_stride
 
-        return flattened_ib,category_buffer_dict
+        obj_model = ObjModel()
+        obj_model.ib = flattened_ib
+        obj_model.category_buffer_dict = category_buffer_dict
+        obj_model.index_vertex_id_dict = None
+        return obj_model
 
-    def calc_index_vertex_buffer_wwmi(self,obj,mesh:bpy.types.Mesh):
+    def calc_index_vertex_buffer_wwmi(self,obj,mesh:bpy.types.Mesh)->ObjModel:
         '''
         计算IndexBuffer和CategoryBufferDict并返回
 
@@ -467,9 +471,13 @@ class BufferModel:
             category_buffer_dict[categoryname] = data_matrix[:,stride_offset:stride_offset + category_stride].flatten()
             stride_offset += category_stride
 
-        return flattened_ib,category_buffer_dict,index_vertex_id_dict
+        obj_model = ObjModel()
+        obj_model.ib = flattened_ib
+        obj_model.category_buffer_dict = category_buffer_dict
+        obj_model.index_vertex_id_dict = index_vertex_id_dict
+        return obj_model
 
-    def calc_index_vertex_buffer_universal(self,obj,mesh:bpy.types.Mesh):
+    def calc_index_vertex_buffer_universal(self,obj,mesh:bpy.types.Mesh)->ObjModel:
         '''
         计算IndexBuffer和CategoryBufferDict并返回
 
@@ -512,4 +520,8 @@ class BufferModel:
             category_buffer_dict[categoryname] = data_matrix[:,stride_offset:stride_offset + category_stride].flatten()
             stride_offset += category_stride
 
-        return flattened_ib,category_buffer_dict
+        obj_model = ObjModel()
+        obj_model.ib = flattened_ib
+        obj_model.category_buffer_dict = category_buffer_dict
+        obj_model.index_vertex_id_dict = None
+        return obj_model

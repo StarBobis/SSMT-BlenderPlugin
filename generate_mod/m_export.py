@@ -2,7 +2,7 @@ import bpy
 
 from ..utils.obj_utils import ObjUtils
 
-from ..migoto.migoto_format import D3D11GameType
+from ..migoto.migoto_format import D3D11GameType,ObjModel
 from ..config.main_config import GlobalConfig
 from .mesh_buffer_model import BufferModel
 
@@ -30,18 +30,19 @@ def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):
     # 读取并解析数据
     buffer_model.parse_elementname_ravel_ndarray_dict(mesh)
 
+    obj_model = ObjModel()
+
     # 因为只有存在TANGENT时，顶点数才会增加，所以如果是GF2并且存在TANGENT才使用共享TANGENT防止增加顶点数
     if GlobalConfig.gamename == "GF2" and "TANGENT" in buffer_model.d3d11GameType.OrderedFullElementList:
-        ib, category_buffer_dict = buffer_model.calc_index_vertex_buffer_girlsfrontline2(obj, mesh)
-        return ib, category_buffer_dict, None
-    
+        obj_model = buffer_model.calc_index_vertex_buffer_girlsfrontline2(obj, mesh)
+
     elif GlobalConfig.gamename == "WWMI":
-        ib, category_buffer_dict,index_vertex_id_dict = buffer_model.calc_index_vertex_buffer_wwmi(obj, mesh)
-        return ib, category_buffer_dict,index_vertex_id_dict
+        obj_model = buffer_model.calc_index_vertex_buffer_wwmi(obj, mesh)
     else:
         # 计算IndexBuffer和CategoryBufferDict
-        ib, category_buffer_dict = buffer_model.calc_index_vertex_buffer_universal(obj, mesh)
-        return ib, category_buffer_dict, None
+        obj_model = buffer_model.calc_index_vertex_buffer_universal(obj, mesh)
+    
+    return obj_model.ib, obj_model.category_buffer_dict, obj_model.index_vertex_id_dict
 
 
 
