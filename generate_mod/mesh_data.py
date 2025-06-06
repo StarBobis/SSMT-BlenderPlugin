@@ -65,7 +65,8 @@ class MeshData:
         blendindices_dict[0] = blendindices
         return blendweights_dict, blendindices_dict
     
-        
+    
+    # TODO V2暂时不能启用，因为无法解决Normalize All的问题。
     def get_blendweights_blendindices_v2(self):
         '''
         升级版，支持多个SemanticIndex的BLENDWEIGHTS和BLENDINDICES
