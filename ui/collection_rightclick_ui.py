@@ -82,6 +82,8 @@ class SSMT_UnlinkObjectsFromCollection(bpy.types.Operator):
         
         print(f"已从集合 '{target_collection.name}' 移除 {unlinked_count} 个物体")
         return {'FINISHED'}
+    
+
 
 def menu_dbmt_mark_collection_switch(self, context):
     self.layout.separator()
@@ -89,6 +91,7 @@ def menu_dbmt_mark_collection_switch(self, context):
     self.layout.operator(Catter_MarkCollection_Switch.bl_idname)
     self.layout.operator(SSMT_LinkObjectsToCollection.bl_idname)
     self.layout.operator(SSMT_UnlinkObjectsFromCollection.bl_idname)
+
 
 
 class PanelCollectionFunction(bpy.types.Panel):

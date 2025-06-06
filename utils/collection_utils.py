@@ -8,6 +8,16 @@ class ModelCollection:
         self.model_collection_name = ""
         self.obj_name_list:list[str] = []
 
+class CollectionColor:
+    White = "NONE"
+    Red = "COLOR_01"
+    Orange = "COLOR_02"
+    Yellow = "COLOR_03"
+    Green = "COLOR_04"
+    Blue = "COLOR_05"
+    Purple = "COLOR_06"
+    Pink = "COLOR_07"
+    Brown = "COLOR_08"
 
 class CollectionUtils:
     @classmethod
@@ -108,21 +118,14 @@ class CollectionUtils:
         else:
             return collection_name
 
-    @classmethod
-    def new_workspace_collection(cls):
-        '''
-        创建一个WorkSpace名称为名称的集合并返回此集合，WorkSpace集合的颜色是COLOR_01        
-        '''
-        workspace_collection = bpy.data.collections.new(GlobalConfig.workspacename)
-        workspace_collection.color_tag = "COLOR_01"
-        return workspace_collection
+
     
     @classmethod
-    def create_new_collection(cls,collection_name:str,color_tag:str,link_to_parent_collection_name:str = ""):
+    def create_new_collection(cls,collection_name:str,color_tag:CollectionColor=CollectionColor.White,link_to_parent_collection_name:str = ""):
         '''
         创建一个新的集合，并且可以选择是否链接到父集合
         :param collection_name: 集合名称
-        :param color_tag: 集合颜色标签
+        :param color_tag: 集合颜色标签  不填则默认为白色
         :param link_to_parent_collection_name: 如果不为空，则将新创建的集合链接到指定的父集合
         '''
         new_collection = bpy.data.collections.new(collection_name)
@@ -136,24 +139,41 @@ class CollectionUtils:
         return new_collection
     
     @classmethod
+    def new_workspace_collection(cls):
+        '''
+        TODO Deprecated
+
+        创建一个WorkSpace名称为名称的集合并返回此集合，WorkSpace集合的颜色是COLOR_01        
+        '''
+        workspace_collection = bpy.data.collections.new(GlobalConfig.workspacename)
+        workspace_collection.color_tag = CollectionColor.Red
+        return workspace_collection
+    
+    @classmethod
     def new_draw_ib_collection(cls,collection_name:str):
+        '''
+        TODO Deprecated
+        '''
         draw_ib_collection = bpy.data.collections.new(collection_name)
-        draw_ib_collection.color_tag = "COLOR_07" #粉色
+        draw_ib_collection.color_tag = CollectionColor.Pink
         return draw_ib_collection
     
     @classmethod
     def new_component_collection(cls,component_name:str):
+        '''
+        TODO Deprecated
+        '''
         component_collection = bpy.data.collections.new(component_name)
-        component_collection.color_tag = "COLOR_05" #蓝色
+        component_collection.color_tag = CollectionColor.Blue
         return component_collection
     
     @classmethod
     def new_switch_collection(cls,collection_name:str):
         '''
-        创建一个按键切换集合，是绿色的，COLOR_04
+        TODO Deprecated
         '''
         switch_collection = bpy.data.collections.new(collection_name)
-        switch_collection.color_tag = "COLOR_04" #绿色
+        switch_collection.color_tag = CollectionColor.Green
         return switch_collection
 
 
