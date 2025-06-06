@@ -49,6 +49,14 @@ class Properties_GenerateMod(bpy.types.PropertyGroup):
     ) # type: ignore
 
     
+    # only_use_marked_texture
+    @classmethod
+    def only_use_marked_texture(cls):
+        '''
+        bpy.context.scene.properties_generate_mod.only_use_marked_texture
+        '''
+        return bpy.context.scene.properties_generate_mod.only_use_marked_texture
+    
 
     @classmethod
     def forbid_auto_texture_ini(cls):
@@ -108,13 +116,6 @@ class Properties_GenerateMod(bpy.types.PropertyGroup):
         '''
         return bpy.context.scene.properties_generate_mod.slot_style_texture_add_filter_index
     
-    # only_use_marked_texture
-    @classmethod
-    def only_use_marked_texture(cls):
-        '''
-        bpy.context.scene.properties_generate_mod.only_use_marked_texture
-        '''
-        return bpy.context.scene.properties_generate_mod.only_use_marked_texture
-    
+
     
     

@@ -170,7 +170,8 @@ class PanelGenerateModConfig(bpy.types.Panel):
         # 因为UnrealVS显然无法支持这里所有的特性，每个游戏只能支持一部分特性。
 
         # 任何游戏都能贴图标记
-        layout.prop(context.scene.properties_generate_mod, "only_use_marked_texture",text="只使用标记过的贴图")
+        if GlobalConfig.gamename == "WWMI":
+            layout.prop(context.scene.properties_generate_mod, "only_use_marked_texture",text="只使用标记过的贴图")
         layout.prop(context.scene.properties_generate_mod, "forbid_auto_texture_ini",text="禁止自动贴图流程")
         
         if GlobalConfig.gamename == "HSR":

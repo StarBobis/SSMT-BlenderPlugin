@@ -235,8 +235,12 @@ class M_IniHelper:
                     if not os.path.exists(target_texture_file_path):
                         shutil.copy2(original_texture_file_path,target_texture_file_path)
 
-            # 如果只使用标记过的贴图，则跳过RenderTextures的生成
-            if Properties_GenerateMod.only_use_marked_texture():
+            # 现在除了WWMI外都不使用全局Hash贴图风格，而是上面的标记的Hash风格贴图
+            if GlobalConfig.gamename != "WWMI":
+                continue
+
+            # 如果WWMI只使用标记过的贴图，则跳过RenderTextures的生成
+            elif Properties_GenerateMod.only_use_marked_texture():
                 continue
 
             # 添加RenderTextures里的的贴图
