@@ -209,8 +209,8 @@ class MigotoBinaryFile:
             raise Fatal("Unable to find matching .vb file for : " + self.mesh_name)
         if not os.path.exists(self.ib_bin_path):
             raise Fatal("Unable to find matching .ib file for : " + self.mesh_name)
-        if not os.path.exists(self.fmt_path):
-            raise Fatal("Unable to find matching .fmt file for : " + self.mesh_name)
+        # if not os.path.exists(self.fmt_path):
+        #     raise Fatal("Unable to find matching .fmt file for : " + self.mesh_name)
 
     def file_size_check(self) -> bool:
         '''
