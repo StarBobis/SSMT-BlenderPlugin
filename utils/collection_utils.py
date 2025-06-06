@@ -118,7 +118,6 @@ class CollectionUtils:
         else:
             return collection_name
 
-
     
     @classmethod
     def create_new_collection(cls,collection_name:str,color_tag:CollectionColor=CollectionColor.White,link_to_parent_collection_name:str = ""):
@@ -138,44 +137,6 @@ class CollectionUtils:
         
         return new_collection
     
-    @classmethod
-    def new_workspace_collection(cls):
-        '''
-        TODO Deprecated
-
-        创建一个WorkSpace名称为名称的集合并返回此集合，WorkSpace集合的颜色是COLOR_01        
-        '''
-        workspace_collection = bpy.data.collections.new(GlobalConfig.workspacename)
-        workspace_collection.color_tag = CollectionColor.Red
-        return workspace_collection
-    
-    @classmethod
-    def new_draw_ib_collection(cls,collection_name:str):
-        '''
-        TODO Deprecated
-        '''
-        draw_ib_collection = bpy.data.collections.new(collection_name)
-        draw_ib_collection.color_tag = CollectionColor.Pink
-        return draw_ib_collection
-    
-    @classmethod
-    def new_component_collection(cls,component_name:str):
-        '''
-        TODO Deprecated
-        '''
-        component_collection = bpy.data.collections.new(component_name)
-        component_collection.color_tag = CollectionColor.Blue
-        return component_collection
-    
-    @classmethod
-    def new_switch_collection(cls,collection_name:str):
-        '''
-        TODO Deprecated
-        '''
-        switch_collection = bpy.data.collections.new(collection_name)
-        switch_collection.color_tag = CollectionColor.Green
-        return switch_collection
-
 
     @classmethod
     def is_valid_workspace_collection(cls,workspace_collection) -> str:
