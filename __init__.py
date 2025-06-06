@@ -48,6 +48,8 @@ register_classes = (
     GenerateModWWMI,
     GenerateModYYSLS,
 
+    SSMTGenerateModUnityVS,
+
     # 模型处理面板
     RemoveAllVertexGroupOperator,
     RemoveUnusedVertexGroupOperator,

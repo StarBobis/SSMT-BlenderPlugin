@@ -4,7 +4,7 @@ from ..utils.obj_utils import ObjUtils
 
 from ..migoto.migoto_format import D3D11GameType,ObjModel
 from ..config.main_config import GlobalConfig
-from .mesh_buffer_model import BufferModel
+from .buffer_model import BufferModel
 
 
 def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):

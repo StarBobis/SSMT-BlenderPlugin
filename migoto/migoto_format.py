@@ -47,6 +47,11 @@ class ObjModel:
         self.index_vertex_id_dict = {} # 仅用于WWMI的索引顶点ID字典，key是顶点索引，value是顶点ID，默认可以为None
         self.obj_name = ""
 
+class DrawIBItem:
+    def __init__(self):
+        self.draw_ib = "" # DrawIB 是8位的 IndexBuffer的Hash值
+        self.alias_name = "" # Alias 是DrawIB的别名，起标识符作用
+
 # Designed to read from json file for game type config
 @dataclass
 class D3D11GameType:

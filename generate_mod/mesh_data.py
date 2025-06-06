@@ -4,7 +4,7 @@ import bpy
 
 class MeshData:
     '''
-    MeshClass用于抽象每一个obj的mesh对象中的数据，加快导出速度。
+    MeshClass用于获取每一个obj的mesh对象中的数据，加快导出速度。
     '''
     
     def __init__(self,mesh:bpy.types.Mesh) -> None:

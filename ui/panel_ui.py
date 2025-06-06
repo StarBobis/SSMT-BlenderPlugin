@@ -243,6 +243,7 @@ class PanelButtons(bpy.types.Panel):
         else:
             if GlobalConfig.get_game_category() == GameCategory.UnityVS:
                 layout.operator("dbmt.export_unity_vs_mod_to_workspace_seperated")
+                layout.operator("ssmt.generate_mod_unity_vs")
             elif GlobalConfig.get_game_category() == GameCategory.UnityCS:
                 layout.operator("dbmt.export_unity_cs_mod_to_workspace_seperated")
             elif GlobalConfig.get_game_category() == GameCategory.UnrealVS:

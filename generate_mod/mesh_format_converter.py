@@ -7,7 +7,7 @@ from ..utils.timer_utils import TimerUtils
 
 class MeshFormatConverter:
     '''
-    各种格式转换
+    用于各种二进制数据格式转换
     '''
     # 向量归一化
     @classmethod
