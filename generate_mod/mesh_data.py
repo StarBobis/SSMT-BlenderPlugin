@@ -9,6 +9,63 @@ class MeshData:
     
     def __init__(self,mesh:bpy.types.Mesh) -> None:
         self.mesh = mesh
+
+    def get_blendweights_blendindices_v1(self):
+        # TODO 下面这里是获取BLENDWEIGHTS和BLENDINDICES的代码，但是只支持前四个BLENDWEIGHTS和BLENDINDICES
+        # 我们需要扩展让它支持任意多个，并且每四个为一组
+        # 比如BLENDWEIGHTS R8G8B8A8_UNORM  BLENDWEIGHTS1 R8G8B8A8_UNORM  
+        # 也会有对应的BLENDINDICES和BLENDINDICES1，数据类型为R8G8B8A8_UINT等等
+        # 数据类型是后面决定的，但是我们这里要提前准备好BLENDWEIGHTS和BLENDINDICES的内容，反正肯定不是4个
+        # 创建一个包含所有循环顶点索引的NumPy数组
+        mesh_loops = self.mesh.loops
+        mesh_loops_length = len(mesh_loops)
+        mesh_vertices = self.mesh.vertices
+
+        loop_vertex_indices = numpy.empty(mesh_loops_length, dtype=int)
+        mesh_loops.foreach_get("vertex_index", loop_vertex_indices)
+
+        max_groups = 4
+
+        # Extract and sort the top 4 groups by weight for each vertex.
+        sorted_groups = [
+            sorted(v.groups, key=lambda x: x.weight, reverse=True)[:max_groups]
+            for v in mesh_vertices
+        ]
+
+        # Initialize arrays to hold all groups and weights with zeros.
+        all_groups = numpy.zeros((len(mesh_vertices), max_groups), dtype=int)
+        all_weights = numpy.zeros((len(mesh_vertices), max_groups), dtype=numpy.float32)
+
+
+        # Fill the pre-allocated arrays with group indices and weights.
+        for v_index, groups in enumerate(sorted_groups):
+            num_groups = min(len(groups), max_groups)
+            all_groups[v_index, :num_groups] = [g.group for g in groups][:num_groups]
+            all_weights[v_index, :num_groups] = [g.weight for g in groups][:num_groups]
+
+        # Initialize the blendindices and blendweights with zeros.
+        blendindices = numpy.zeros((mesh_loops_length, max_groups), dtype=numpy.uint32)
+        blendweights = numpy.zeros((mesh_loops_length, max_groups), dtype=numpy.float32)
+
+        # Map from loop_vertex_indices to precomputed data using advanced indexing.
+        valid_mask = (0 <= numpy.array(loop_vertex_indices)) & (numpy.array(loop_vertex_indices) < len(mesh_vertices))
+        valid_indices = loop_vertex_indices[valid_mask]
+
+        blendindices[valid_mask] = all_groups[valid_indices]
+        blendweights[valid_mask] = all_weights[valid_indices]
+
+        # XXX 必须对当前obj对象执行权重规格化，否则模型细分后会导致模型坑坑洼洼
+        # if "Blend" in self.d3d11GameType.OrderedCategoryNameList:
+        #     if blendweights_formatlen > 1:
+        #         blendweights = blendweights / numpy.sum(blendweights, axis=1)[:, None]
+
+        blendweights_dict = {}
+        blendindices_dict = {}
+
+        blendweights_dict[0] = blendweights
+        blendindices_dict[0] = blendindices
+        return blendweights_dict, blendindices_dict
+    
         
     def get_blendweights_blendindices_v2(self):
         '''

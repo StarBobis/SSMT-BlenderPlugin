@@ -89,7 +89,7 @@ class BufferModel:
 
 
         mesh_data = MeshData(mesh=mesh)
-        blendweights_dict, blendindices_dict = mesh_data.get_blendweights_blendindices_v2()
+        blendweights_dict, blendindices_dict = mesh_data.get_blendweights_blendindices_v1()
 
 
         # 对每一种Element都获取对应的数据
