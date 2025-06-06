@@ -10,7 +10,7 @@ class MeshData:
     def __init__(self,mesh:bpy.types.Mesh) -> None:
         self.mesh = mesh
 
-    def get_blendweights_blendindices_v1(self):
+    def get_blendweights_blendindices_v1(self,normalize_weights:bool = False):
         # TODO 下面这里是获取BLENDWEIGHTS和BLENDINDICES的代码，但是只支持前四个BLENDWEIGHTS和BLENDINDICES
         # 我们需要扩展让它支持任意多个，并且每四个为一组
         # 比如BLENDWEIGHTS R8G8B8A8_UNORM  BLENDWEIGHTS1 R8G8B8A8_UNORM  
@@ -55,9 +55,8 @@ class MeshData:
         blendweights[valid_mask] = all_weights[valid_indices]
 
         # XXX 必须对当前obj对象执行权重规格化，否则模型细分后会导致模型坑坑洼洼
-        # if "Blend" in self.d3d11GameType.OrderedCategoryNameList:
-        #     if blendweights_formatlen > 1:
-        #         blendweights = blendweights / numpy.sum(blendweights, axis=1)[:, None]
+        
+        blendweights = blendweights / numpy.sum(blendweights, axis=1)[:, None]
 
         blendweights_dict = {}
         blendindices_dict = {}
