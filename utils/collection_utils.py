@@ -118,6 +118,24 @@ class CollectionUtils:
         return workspace_collection
     
     @classmethod
+    def create_new_collection(cls,collection_name:str,color_tag:str,link_to_parent_collection_name:str = ""):
+        '''
+        创建一个新的集合，并且可以选择是否链接到父集合
+        :param collection_name: 集合名称
+        :param color_tag: 集合颜色标签
+        :param link_to_parent_collection_name: 如果不为空，则将新创建的集合链接到指定的父集合
+        '''
+        new_collection = bpy.data.collections.new(collection_name)
+        new_collection.color_tag = color_tag
+        
+        if link_to_parent_collection_name:
+            parent_collection = CollectionUtils.get_collection_by_name(link_to_parent_collection_name)
+            if parent_collection:
+                parent_collection.children.link(new_collection)
+        
+        return new_collection
+    
+    @classmethod
     def new_draw_ib_collection(cls,collection_name:str):
         draw_ib_collection = bpy.data.collections.new(collection_name)
         draw_ib_collection.color_tag = "COLOR_07" #粉色
