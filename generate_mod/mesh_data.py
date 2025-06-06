@@ -46,10 +46,10 @@ class MeshData:
 
             # 这个归一化，我测试了，细分之后不管是否归一化都对最终效果没有影响
             # 所以这个代码实际上没啥用，但是仍然保留以防万一。
-            # if len(weights) > 0:
-            #     total_weight = numpy.sum(weights)
-            #     if total_weight > 0:
-            #         weights = weights / total_weight
+            if len(weights) > 0:
+                total_weight = numpy.sum(weights)
+                if total_weight > 0:
+                    weights = weights / total_weight
             
             # 填充到数组中
             num_groups = min(len(groups), max_groups_per_vertex)
