@@ -29,6 +29,7 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
             self.report({'ERROR'},result)
             return {'FINISHED'}
         
+        global_key_index = 0
         for draw_ib_collection in workspace_collection.children:
             # Skip hide collection.
             if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
@@ -37,7 +38,11 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection,False)
+
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection,merge_obj=False,global_key_index=global_key_index)
+
+            global_key_index = global_key_index + draw_ib_model.global_key_index
+            
             M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod

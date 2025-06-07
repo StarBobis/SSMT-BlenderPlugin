@@ -34,10 +34,11 @@ class DrawIBModelUniversal:
 
 
     # 通过default_factory让每个类的实例的变量分割开来，不再共享类的静态变量
-    def __init__(self,draw_ib_collection,merge_obj:bool = False):
+    def __init__(self,draw_ib_collection,merge_obj:bool = False,global_key_index:int = 0):
         '''
         根据3Dmigoto的架构设计，每个DrawIB都是一个独立的Mod
         '''
+        self.global_key_index = global_key_index
 
         # (1) 从集合名称中获取当前DrawIB和别名
         self.__initlialize_drawib_item(drawib_collection_name=draw_ib_collection.name)
@@ -66,10 +67,9 @@ class DrawIBModelUniversal:
         self.component_name_component_model_dict:dict[str,ComponentModel] = {}
         # 使用全局key索引，确保存在多个Component时声明的key不会重复
         self.key_name_mkey_dict:dict[str,M_Key] = {}
-        global_key_index = 0
         for component_collection in component_collection_list:
-            component_model = ComponentModel(component_collection=component_collection,global_key_index=global_key_index,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
-            global_key_index = component_model.global_key_index
+            component_model = ComponentModel(component_collection=component_collection,global_key_index=self.global_key_index,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
+            self.global_key_index = component_model.global_key_index
 
             self.component_model_list.append(component_model)
             self.component_name_component_model_dict[component_model.component_name] = component_model

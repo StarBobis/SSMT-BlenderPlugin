@@ -139,7 +139,7 @@ class ComponentModel:
                 m_key = M_Key()
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
                 LOG.info("self.global_key_index: " + str(self.global_key_index))
-                m_key.key_name = "$"+ self.draw_ib + "swapkey" + str(self.global_key_index)
+                m_key.key_name = "$swapkey" + str(self.global_key_index)
                 LOG.info("设置KEYname: " + m_key.key_name)
 
                 m_key.value_list = [0,1]
@@ -182,7 +182,7 @@ class ComponentModel:
                 m_key = M_Key()
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
                 LOG.info("self.global_key_index: " + str(self.global_key_index))
-                m_key.key_name = "$"+self.draw_ib + "swapkey" + str(self.global_key_index)
+                m_key.key_name = "$swapkey" + str(self.global_key_index)
                 LOG.info("设置KEYname: " + m_key.key_name)
                 m_key.value_list = list(range(len(switch_collection_list)))
                 m_key.key_value = ConfigUtils.get_mod_switch_key(self.global_key_index)
