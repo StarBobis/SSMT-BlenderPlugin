@@ -36,7 +36,7 @@ class M_IniHelperV2:
             ini_builder.append_section(present_section)
     
     @classmethod
-    def add_switchkey_sections(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
+    def add_switchkey_sections(cls,ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
         '''
         声明按键切换和按键开关的变量 Key Section
         '''
@@ -60,6 +60,8 @@ class M_IniHelperV2:
                         key_cycle_str = key_cycle_str + str(i)
                 key_section.append(mkey.key_name + " = " + key_cycle_str)
                 key_section.new_line()
+        ini_builder.append_section(key_section)
+
         
 
 class M_UnityIniModelV2:
