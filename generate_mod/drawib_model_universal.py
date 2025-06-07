@@ -1,6 +1,7 @@
 import numpy
 import struct
 import re
+import copy
 
 from .m_export import get_buffer_ib_vb_fast
 
@@ -65,12 +66,19 @@ class DrawIBModelUniversal:
         self.component_name_component_model_dict:dict[str,ComponentModel] = {}
         # 使用全局key索引，确保存在多个Component时声明的key不会重复
         global_key_index = 0 
+        self.key_name_mkey_dict:dict[str,M_Key] = {}
         for component_collection in component_collection_list:
             component_model = ComponentModel(component_collection=component_collection,global_key_index=global_key_index,d3d11_game_type=self.d3d11GameType)
             global_key_index = component_model.global_key_index
 
             self.component_model_list.append(component_model)
             self.component_name_component_model_dict[component_model.component_name] = component_model
+
+            for key_name, mkey in component_model.keyname_mkey_dict.items():
+                self.key_name_mkey_dict[key_name] = mkey
+                print("key_name: " + key_name + "  key:" + str(mkey)) 
+        
+        
 
         
         # (4) 根据之前解析集合架构的结果，读取obj对象内容到字典中
@@ -221,10 +229,12 @@ class DrawIBModelUniversal:
         
         obj_name_drawindexedobj_cache_dict:dict[str,M_DrawIndexed] = {}
 
-        
+        new_component_model_list = []
         for component_model in self.component_model_list:
             ib_buf = []
             offset = 0
+
+            new_final_ordered_draw_obj_model_list:list[ObjModel] = [] 
 
             for obj_model in component_model.final_ordered_draw_obj_model_list:
                 obj_name = obj_model.obj_name
@@ -272,13 +282,25 @@ class DrawIBModelUniversal:
                     # 加入缓存
                     obj_name_drawindexedobj_cache_dict[obj_name] = drawindexed_obj
 
+                
+                obj_model.drawindexed_obj = drawindexed_obj
+                new_final_ordered_draw_obj_model_list.append(obj_model)
+
+            component_model.final_ordered_draw_obj_model_list = new_final_ordered_draw_obj_model_list
+            new_component_model_list.append(component_model)
+            self.component_name_component_model_dict[component_model.component_name] = copy.deepcopy(component_model)
+
             # Only export if it's not empty.
             if len(ib_buf) == 0:
                 LOG.warning(self.draw_ib + " collection: " + self.component_name + " is hide, skip export ib buf.")
             else:
                 self.componentname_ibbuf_dict[component_model.component_name] = ib_buf
 
+        self.component_model_list = new_component_model_list
+
         self.total_index_count = total_offset
+
+        
 
     def combine_partname_ib_resource_and_filename_dict(self):
         '''

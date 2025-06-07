@@ -7,6 +7,7 @@ from ..generate_mod.ini_model_unity import *
 from ..generate_mod.ini_model_hsr import M_HSRIniModel
 from ..generate_mod.ini_model_wwmi import M_WWMIIniModel
 from ..generate_mod.ini_model_ctx import M_CTX_IniModel
+from ..generate_mod.ini_model_unity_v2 import M_UnityIniModelV2
 
 from ..generate_mod.drawib_model_universal import DrawIBModelUniversal
 
@@ -19,7 +20,7 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
     def execute(self, context):
         TimerUtils.Start("GenerateMod UnityVS")
 
-        M_UnityIniModel.initialzie()
+        M_UnityIniModelV2.initialzie()
 
         workspace_collection = bpy.context.collection
 
@@ -37,10 +38,10 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
             draw_ib_model = DrawIBModelUniversal(draw_ib_collection,False)
-            M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+            M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod
-        M_UnityIniModel.generate_unity_vs_config_ini()
+        M_UnityIniModelV2.generate_unity_vs_config_ini()
 
         self.report({'INFO'},"Generate Mod Success!")
         CommandUtils.OpenGeneratedModFolder()
