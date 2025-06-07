@@ -30,7 +30,7 @@ class M_IniHelperV2:
                     shutil.copy2(source_path,target_path)
 
     @classmethod
-    def add_switchkey_constants_section(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number,global_key_index_constants):
+    def add_switchkey_constants_section(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
         '''
         声明SwitchKey的Constants变量
         '''
@@ -88,12 +88,6 @@ class M_IniHelperV2:
 
 class M_UnityIniModelV2:
     drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal] = {}
-
-    # 代表全局声明了几个Key
-    global_key_index_constants = 0
-
-
-    global_key_index_logic = 0
 
     # 这个数量代表一共生成了几个DrawIB的Mod，每个DrawIB都是一个Mod
     global_generate_mod_number = 0
@@ -385,7 +379,7 @@ class M_UnityIniModelV2:
             texture_override_vb_section = M_IniSection(M_SectionType.TextureOverrideVB)
             texture_override_vb_section.append("; " + draw_ib + " ----------------------------")
             for category_name in d3d11GameType.OrderedCategoryNameList:
-                category_hash = draw_ib_model.category_hash_dict[category_name]
+                category_hash = draw_ib_model.import_config.category_hash_dict[category_name]
                 category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
                 texture_override_vb_namesuffix = "VB_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_" + category_name
 
@@ -436,7 +430,7 @@ class M_UnityIniModelV2:
                 
                 # 分支架构，如果是Position则需提供激活变量
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Position"]:
-                    if draw_ib_model.key_number != 0:
+                    if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
                         texture_override_vb_section.append("$active" + str(cls.global_generate_mod_number) + " = 1")
 
                 texture_override_vb_section.new_line()
@@ -449,9 +443,9 @@ class M_UnityIniModelV2:
         draw_ib = draw_ib_model.draw_ib
         d3d11GameType = draw_ib_model.d3d11GameType
 
-        for count_i in range(len(draw_ib_model.part_name_list)):
-            match_first_index = draw_ib_model.match_first_index_list[count_i]
-            part_name = draw_ib_model.part_name_list[count_i]
+        for count_i in range(len(draw_ib_model.import_config.part_name_list)):
+            match_first_index = draw_ib_model.import_config.match_first_index_list[count_i]
+            part_name = draw_ib_model.import_config.part_name_list[count_i]
 
             style_part_name = "Component" + part_name
             ib_resource_name = "Resource_" + draw_ib + "_" + style_part_name
@@ -500,11 +494,20 @@ class M_UnityIniModelV2:
 
             # Component DrawIndexed输出
             component_name = "Component " + part_name 
-            model_collection_list = draw_ib_model.componentname_modelcollection_list_dict[component_name]
+            
+            component_model = draw_ib_model.component_name_component_model_dict[component_name]
+            for obj_model in component_model.final_ordered_draw_obj_model_list:
+                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
 
-            drawindexed_list, added_global_key_index_logic = M_IniHelper.get_switchkey_drawindexed_list(model_collection_list=model_collection_list, draw_ib_model=draw_ib_model,vlr_filter_index_indent=cls.vlr_filter_index_indent,input_global_key_index_logic=cls.global_key_index_logic)
-            for drawindexed_str in drawindexed_list:
-                texture_override_ib_section.append(drawindexed_str)
+                if obj_model.condition.condition_str != "":
+                    
+                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
+                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
+                    texture_override_ib_section.append("endif")
+                else:
+                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
+                
+                texture_override_ib_section.new_line()
  
             
             if cls.vlr_filter_index_indent != "":
@@ -542,8 +545,8 @@ class M_UnityIniModelV2:
 
         We default use R32_UINT because R16_UINT have a very small number limit.
         '''
-        for count_i in range(len(draw_ib_model.part_name_list)):
-            partname = draw_ib_model.part_name_list[count_i]
+        for count_i in range(len(draw_ib_model.import_config.part_name_list)):
+            partname = draw_ib_model.import_config.part_name_list[count_i]
             style_partname = "Component" + partname
             ib_resource_name = "Resource_" + draw_ib_model.draw_ib + "_" + style_partname
 
@@ -604,7 +607,7 @@ class M_UnityIniModelV2:
 
         vs_hash_set = set()
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
-            for vs_hash in draw_ib_model.vshash_list:
+            for vs_hash in draw_ib_model.import_config.vshash_list:
                 vs_hash_set.add(vs_hash)
         
         for vs_hash in vs_hash_set:
@@ -635,7 +638,7 @@ class M_UnityIniModelV2:
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number,global_key_index_constants=cls.global_key_index_constants)
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
             M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
             M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number) 
 
@@ -683,7 +686,7 @@ class M_UnityIniModelV2:
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number,global_key_index_constants=cls.global_key_index_constants)
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
             M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
             M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number) 
         

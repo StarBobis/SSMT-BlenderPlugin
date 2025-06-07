@@ -1,9 +1,9 @@
 import shutil
 import math
 
-from .m_ini_builder import *
-from .m_drawib_model import *
-from .m_ini_helper import M_IniHelper
+from ..generate_mod.m_ini_builder import *
+from ..generate_mod.m_drawib_model import *
+from ..generate_mod.m_ini_helper import M_IniHelper
 
 from ..properties.properties_generate_mod import Properties_GenerateMod
 

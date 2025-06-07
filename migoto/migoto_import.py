@@ -120,7 +120,6 @@ def ImprotFromWorkSpaceSSMT(self, context):
             part_count = part_count + 1
 
     # 这里先链接SourceCollection，确保它在上面
-
     bpy.context.scene.collection.children.link(workspace_collection)
 
     # Select all objects under collection (因为用户习惯了导入后就是全部选中的状态). 

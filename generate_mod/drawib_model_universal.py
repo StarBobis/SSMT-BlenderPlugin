@@ -159,9 +159,7 @@ class DrawIBModelUniversal:
         是游戏原本的做法，但是不分开的话，一个IndexBuffer文件会遇到135W顶点索引数的上限。
         
         由于在WWMI中只能使用一个IB文件，而在GI、HSR、HI3、ZZZ等Unity游戏中天生就能使用多个IB文件
-        所以这里只有WWMI会用到，其它游戏如果不是必要尽量不要用，避免135W左右的顶点索引数限制。
-
-
+        目前IdentityV会用到，WWMI会用到但是是MergedObj不在这个逻辑里
         '''
 
         obj_name_drawindexedobj_cache_dict:dict[str,M_DrawIndexed] = {}
@@ -169,59 +167,69 @@ class DrawIBModelUniversal:
         vertex_number_ib_offset = 0
         ib_buf = []
         draw_offset = 0
-        for component_name, moel_collection_list in self.componentname_modelcollection_list_dict.items():
-            for model_collection in moel_collection_list:
-                for obj_name in model_collection.obj_name_list:
-                    drawindexed_obj = obj_name_drawindexedobj_cache_dict.get(obj_name,None)
-                    if drawindexed_obj is not None:
-                        LOG.info("Using cached drawindexed object for " + obj_name)
-                        # 如果已经存在的情况下，不改变draw_offset，也不改变vertex_number_ib_offset，直接使用就好了
-                        self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
-                        
-                    else:
-                        # print("processing: " + obj_name)
-                        ib = self.__obj_name_ib_dict.get(obj_name,None)
 
-                        # ib的数据类型是list[int]
-                        unique_vertex_number_set = set(ib)
-                        unique_vertex_number = len(unique_vertex_number_set)
+        new_component_model_list = []
+        for component_model in self.component_model_list:
+            new_final_ordered_draw_obj_model_list:list[ObjModel] = [] 
 
-                        if ib is None:
-                            print("Can't find ib object for " + obj_name +",skip this obj process.")
-                            continue
-                        
-                        # 扩充总IB Buffer
-                        offset_ib = []
-                        for ib_number in ib:
-                            offset_ib.append(ib_number + vertex_number_ib_offset)
-                        ib_buf.extend(offset_ib)
-                        # Add UniqueVertexNumber to show vertex count in mod ini.
-                        # print("Draw Number: " + str(unique_vertex_number))
-                        vertex_number_ib_offset = vertex_number_ib_offset + unique_vertex_number
-                        # print("Component name: " + component_name)
-                        # print("Draw Offset: " + str(vertex_number_ib_offset))
-                        drawindexed_obj = M_DrawIndexed()
-                        draw_number = len(offset_ib)
-                        drawindexed_obj.DrawNumber = str(draw_number)
-                        drawindexed_obj.DrawOffsetIndex = str(draw_offset)
-                        drawindexed_obj.UniqueVertexCount = unique_vertex_number
-                        drawindexed_obj.AliasName = "[" + model_collection.model_collection_name + "] [" + obj_name + "]  (" + str(unique_vertex_number) + ")"
-                        self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
-                        draw_offset = draw_offset + draw_number
+            for obj_model in component_model.final_ordered_draw_obj_model_list:
+                obj_name = obj_model.obj_name
 
-                        obj_name_drawindexedobj_cache_dict[obj_name] = drawindexed_obj
-
+                drawindexed_obj = obj_name_drawindexedobj_cache_dict.get(obj_name,None)
+                if drawindexed_obj is not None:
+                    LOG.info("Using cached drawindexed object for " + obj_name)
+                    # 如果已经存在的情况下，不改变draw_offset，也不改变vertex_number_ib_offset，直接使用就好了
+                    self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
                     
+                else:
+                    # print("processing: " + obj_name)
+                    ib = self.__obj_name_ib_dict.get(obj_name,None)
+
+                    # ib的数据类型是list[int]
+                    unique_vertex_number_set = set(ib)
+                    unique_vertex_number = len(unique_vertex_number_set)
+
+                    if ib is None:
+                        print("Can't find ib object for " + obj_name +",skip this obj process.")
+                        continue
+                    
+                    # 扩充总IB Buffer
+                    offset_ib = []
+                    for ib_number in ib:
+                        offset_ib.append(ib_number + vertex_number_ib_offset)
+                    ib_buf.extend(offset_ib)
+                    # Add UniqueVertexNumber to show vertex count in mod ini.
+                    # print("Draw Number: " + str(unique_vertex_number))
+                    vertex_number_ib_offset = vertex_number_ib_offset + unique_vertex_number
+                    # print("Component name: " + component_name)
+                    # print("Draw Offset: " + str(vertex_number_ib_offset))
+                    drawindexed_obj = M_DrawIndexed()
+                    draw_number = len(offset_ib)
+                    drawindexed_obj.DrawNumber = str(draw_number)
+                    drawindexed_obj.DrawOffsetIndex = str(draw_offset)
+                    drawindexed_obj.UniqueVertexCount = unique_vertex_number
+                    drawindexed_obj.AliasName = "[" + obj_name + "]  (" + str(unique_vertex_number) + ")"
+                    self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
+                    draw_offset = draw_offset + draw_number
+
+                    obj_name_drawindexedobj_cache_dict[obj_name] = drawindexed_obj
+                
+                obj_model.drawindexed_obj = drawindexed_obj
+                new_final_ordered_draw_obj_model_list.append(obj_model)
+            
+            component_model.final_ordered_draw_obj_model_list = new_final_ordered_draw_obj_model_list
+            new_component_model_list.append(component_model)
+            self.component_name_component_model_dict[component_model.component_name] = copy.deepcopy(component_model)
 
         # 累加完毕后draw_offset的值就是总的index_count的值，正好作为WWMI的$object_id
         self.total_index_count = draw_offset
 
-        for component_name, moel_collection_list in self.componentname_modelcollection_list_dict.items():
+        for component_model in self.component_model_list:
             # Only export if it's not empty.
             if len(ib_buf) != 0:
-                self.componentname_ibbuf_dict[component_name] = ib_buf
+                self.componentname_ibbuf_dict[component_model.component_name] = ib_buf
             else:
-                LOG.warning(self.draw_ib + " collection: " + component_name + " is hide, skip export ib buf.")
+                LOG.warning(self.draw_ib + " collection: " + component_model.component_name + " is hide, skip export ib buf.")
     
     def __read_component_ib_buf_dict_seperated_single(self):
         vertex_number_ib_offset = 0

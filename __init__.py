@@ -19,9 +19,9 @@ from .ui.panel_ssmt import *
 
 bl_info = {
     "name": "SSMT",
-    "description": "Super Simple Migoto Tool",
+    "description": "SSMT",
     "blender": (3, 6, 0),
-    "version": (1, 4, 6),
+    "version": (1, 4, 7),
     "location": "View3D",
     "category": "Generic"
 }
@@ -43,11 +43,11 @@ register_classes = (
     SSMTImportAllFromCurrentWorkSpace,
     # 生成Mod功能
     ExportModHonkaiStarRail32,
-    DBMTExportUnityVSModToWorkSpaceSeperated,
-    DBMTExportUnityCSModToWorkSpaceSeperated,
+    # DBMTExportUnityVSModToWorkSpaceSeperated,
+    # DBMTExportUnityCSModToWorkSpaceSeperated,
     GenerateModWWMI,
     GenerateModYYSLS,
-
+    SSMTGenerateModUnityCS,
     SSMTGenerateModUnityVS,
 
     # 模型处理面板

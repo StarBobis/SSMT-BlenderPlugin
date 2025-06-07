@@ -1,9 +1,10 @@
 import bpy
 
 from ..utils.command_utils import *
+from ..utils.timer_utils import TimerUtils
+from ..utils.collection_utils import CollectionUtils
 from ..generate_mod.m_drawib_model import DrawIBModel
 from ..generate_mod.m_drawib_model_wwmi import DrawIBModelWWMI
-from ..generate_mod.ini_model_unity import *
 from ..generate_mod.ini_model_hsr import M_HSRIniModel
 from ..generate_mod.ini_model_wwmi import M_WWMIIniModel
 from ..generate_mod.ini_model_ctx import M_CTX_IniModel
@@ -54,25 +55,24 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
         TimerUtils.End("GenerateMod UnityVS")
         return {'FINISHED'}
 
-
-
-class DBMTExportUnityVSModToWorkSpaceSeperated(bpy.types.Operator):
-    bl_idname = "dbmt.export_unity_vs_mod_to_workspace_seperated"
-    bl_label = "生成Mod"
-    bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。"
+class SSMTGenerateModUnityCS(bpy.types.Operator):
+    bl_idname = "ssmt.generate_mod_unity_cs"
+    bl_label = "生成Mod(SSMT Test)"
+    bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。使用前确保取消隐藏所有要导出的模型以及集合"
 
     def execute(self, context):
-        TimerUtils.Start("GenerateMod UnityVS Fast")
+        TimerUtils.Start("GenerateMod UnityCS")
 
-        M_UnityIniModel.initialzie()
+        M_UnityIniModelV2.initialzie()
 
         workspace_collection = bpy.context.collection
 
-        result = CollectionUtils.is_valid_workspace_collection(workspace_collection)
+        result = CollectionUtils.is_valid_ssmt_workspace_collection(workspace_collection)
         if result != "":
             self.report({'ERROR'},result)
             return {'FINISHED'}
         
+        global_key_index = 0
         for draw_ib_collection in workspace_collection.children:
             # Skip hide collection.
             if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
@@ -81,17 +81,58 @@ class DBMTExportUnityVSModToWorkSpaceSeperated(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModel(draw_ib_collection,False)
-            M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection,merge_obj=False,global_key_index=global_key_index)
+
+            global_key_index = global_key_index + draw_ib_model.global_key_index
+            
+            M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod
-        M_UnityIniModel.generate_unity_vs_config_ini()
+        M_UnityIniModelV2.generate_unity_cs_config_ini()
 
         self.report({'INFO'},"Generate Mod Success!")
         CommandUtils.OpenGeneratedModFolder()
 
-        TimerUtils.End("GenerateMod UnityVS Fast")
+        TimerUtils.End("GenerateMod UnityCS")
         return {'FINISHED'}
+
+# class DBMTExportUnityVSModToWorkSpaceSeperated(bpy.types.Operator):
+#     bl_idname = "dbmt.export_unity_vs_mod_to_workspace_seperated"
+#     bl_label = "生成Mod"
+#     bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。"
+
+#     def execute(self, context):
+#         TimerUtils.Start("GenerateMod UnityVS Fast")
+
+#         M_UnityIniModel.initialzie()
+
+#         workspace_collection = bpy.context.collection
+
+#         result = CollectionUtils.is_valid_workspace_collection(workspace_collection)
+#         if result != "":
+#             self.report({'ERROR'},result)
+#             return {'FINISHED'}
+        
+#         for draw_ib_collection in workspace_collection.children:
+#             # Skip hide collection.
+#             if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
+#                 continue
+
+#             # get drawib
+#             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
+#             draw_ib = draw_ib_alias_name.split("_")[0]
+#             draw_ib_model = DrawIBModel(draw_ib_collection,False)
+#             M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+
+#         # ModModel填充完毕后，开始输出Mod
+#         M_UnityIniModel.generate_unity_vs_config_ini()
+
+#         self.report({'INFO'},"Generate Mod Success!")
+#         CommandUtils.OpenGeneratedModFolder()
+
+#         TimerUtils.End("GenerateMod UnityVS Fast")
+#         return {'FINISHED'}
 
 
 # 崩铁3.2专用...
@@ -130,43 +171,43 @@ class ExportModHonkaiStarRail32(bpy.types.Operator):
         return {'FINISHED'}
     
 
-class DBMTExportUnityCSModToWorkSpaceSeperated(bpy.types.Operator):
-    bl_idname = "dbmt.export_unity_cs_mod_to_workspace_seperated"
-    bl_label = "生成Mod"
-    bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。"
+# class DBMTExportUnityCSModToWorkSpaceSeperated(bpy.types.Operator):
+#     bl_idname = "dbmt.export_unity_cs_mod_to_workspace_seperated"
+#     bl_label = "生成Mod"
+#     bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。"
 
-    def execute(self, context):
-        TimerUtils.Start("GenerateMod UnityCS")
+#     def execute(self, context):
+#         TimerUtils.Start("GenerateMod UnityCS")
 
-        M_UnityIniModel.initialzie()
+#         M_UnityIniModel.initialzie()
 
-        workspace_collection = bpy.context.collection
+#         workspace_collection = bpy.context.collection
 
-        result = CollectionUtils.is_valid_workspace_collection(workspace_collection)
-        if result != "":
-            self.report({'ERROR'},result)
-            return {'FINISHED'}
+#         result = CollectionUtils.is_valid_workspace_collection(workspace_collection)
+#         if result != "":
+#             self.report({'ERROR'},result)
+#             return {'FINISHED'}
         
-        for draw_ib_collection in workspace_collection.children:
-            # Skip hide collection.
-            if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
-                continue
+#         for draw_ib_collection in workspace_collection.children:
+#             # Skip hide collection.
+#             if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
+#                 continue
 
-            # get drawib
-            draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
-            draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModel(draw_ib_collection,False)
-            M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+#             # get drawib
+#             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
+#             draw_ib = draw_ib_alias_name.split("_")[0]
+#             draw_ib_model = DrawIBModel(draw_ib_collection,False)
+#             M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
-        # ModModel填充完毕后，开始输出Mod
-        M_UnityIniModel.generate_unity_cs_config_ini()
+#         # ModModel填充完毕后，开始输出Mod
+#         M_UnityIniModel.generate_unity_cs_config_ini()
 
-        self.report({'INFO'},"Generate Mod Success!")
+#         self.report({'INFO'},"Generate Mod Success!")
 
-        CommandUtils.OpenGeneratedModFolder()
+#         CommandUtils.OpenGeneratedModFolder()
 
-        TimerUtils.End("GenerateMod UnityCS")
-        return {'FINISHED'}
+#         TimerUtils.End("GenerateMod UnityCS")
+#         return {'FINISHED'}
     
     
 # WWMI
