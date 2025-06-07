@@ -45,7 +45,7 @@ class M_IniHelperV2:
 
             for mkey in draw_ib_model.key_name_mkey_dict.values():
                 key_section = M_IniSection(M_SectionType.Key)
-                key_section.append("[KeySwap" + str(key_number) + "]")
+                key_section.append("[KeySwap_" + str(global_generate_mod_number) + "_" + str(key_number) + "]")
                 if draw_ib_model.d3d11GameType.GPU_PreSkinning:
                     key_section.append("condition = $active" + str(global_generate_mod_number) + " == 1")
                 key_section.append("key = " + mkey.key_value)
@@ -61,6 +61,8 @@ class M_IniHelperV2:
                 key_section.append(mkey.key_name + " = " + key_cycle_str)
                 key_section.new_line()
                 ini_builder.append_section(key_section)
+
+                key_number = key_number + 1
 
         
 
