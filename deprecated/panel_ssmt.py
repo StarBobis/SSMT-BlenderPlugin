@@ -2,8 +2,8 @@ import bpy
 import os
 
 
-from ..games.GenshinImpact import SSMTExtractModelGI
-from ..games.ZenlessZoneZero import SSMTExtractModelZZZ
+from . import SSMTExtractModelGI
+from . import SSMTExtractModelZZZ
 
 from ..config.main_config import GlobalConfig
 from ..properties.properties_dbmt_path import Properties_DBMT_Path  

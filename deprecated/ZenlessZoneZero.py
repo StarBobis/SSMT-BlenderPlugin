@@ -1,8 +1,8 @@
 import bpy
 
 from ..config.main_config import GlobalConfig
-from ..utils.frameanalysis_data_utils import FADataUtils
-from ..utils.frameanalysis_log_utils import FALogUtils
+from .frameanalysis_data_utils import FADataUtils
+from .frameanalysis_log_utils import FALogUtils
 from ..utils.format_utils import FormatUtils
 from ..utils.log_utils import LOG
 

@@ -9,7 +9,7 @@ from ..utils.obj_utils import ObjUtils
 from ..migoto.migoto_format import M_Key, ObjModel, M_DrawIndexed, M_Condition,D3D11GameType
 
 from .m_export import get_buffer_ib_vb_fast
-
+from .m_counter import M_Counter
     
 class ComponentModel:
     '''
@@ -18,13 +18,12 @@ class ComponentModel:
     TODO 后续如果要让全部游戏都用我们这个架构，感觉还有点麻烦，尤其是WWMI的MergeObj问题。
     '''
 
-    def __init__(self,component_collection,global_key_index:int, d3d11_game_type:D3D11GameType,draw_ib:str):
+    def __init__(self,component_collection, d3d11_game_type:D3D11GameType,draw_ib:str):
         '''
         传入一个【Component集合】，然后解析并设置各项属性
         '''
         self.draw_ib = draw_ib
         self.d3d11_game_type = d3d11_game_type
-        self.global_key_index = global_key_index
         self.component_name = CollectionUtils.get_clean_collection_name(component_collection.name)
         print("当前处理Component: " + self.component_name)
 
@@ -138,19 +137,18 @@ class ComponentModel:
                 '''
                 m_key = M_Key()
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
-                LOG.info("self.global_key_index: " + str(self.global_key_index))
-                m_key.key_name = "$swapkey" + str(self.global_key_index)
+                m_key.key_name = "$swapkey" + str(M_Counter.global_key_index)
                 LOG.info("设置KEYname: " + m_key.key_name)
 
                 m_key.value_list = [0,1]
-                m_key.key_value = ConfigUtils.get_mod_switch_key(self.global_key_index)
+                m_key.key_value = ConfigUtils.get_mod_switch_key(M_Counter.global_key_index)
 
                 # 创建的key要加入全局key列表
                 self.keyname_mkey_dict[m_key.key_name] = m_key
 
                 if len(self.keyname_mkey_dict.keys()) > current_add_key_index:
                     LOG.info("Global Key Index ++")
-                    self.global_key_index = self.global_key_index + 1
+                    M_Counter.global_key_index = M_Counter.global_key_index + 1
 
                 # 创建的key要加入chain_key_list传递下去
                 # 因为传递解析下去的话，要让这个key生效，而又因为它是按键开关key，所以value为1生效，所以tmp_value设为1
@@ -181,18 +179,18 @@ class ComponentModel:
                 # 创建并添加一个key
                 m_key = M_Key()
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
-                LOG.info("self.global_key_index: " + str(self.global_key_index))
-                m_key.key_name = "$swapkey" + str(self.global_key_index)
+          
+                m_key.key_name = "$swapkey" + str(M_Counter.global_key_index)
                 LOG.info("设置KEYname: " + m_key.key_name)
                 m_key.value_list = list(range(len(switch_collection_list)))
-                m_key.key_value = ConfigUtils.get_mod_switch_key(self.global_key_index)
+                m_key.key_value = ConfigUtils.get_mod_switch_key(M_Counter.global_key_index)
 
                 # 创建的key要加入全局key列表
                 self.keyname_mkey_dict[m_key.key_name] = m_key
 
                 if len(self.keyname_mkey_dict.keys()) > current_add_key_index:
                     LOG.info("Global Key Index ++")
-                    self.global_key_index = self.global_key_index + 1
+                    M_Counter.global_key_index = M_Counter.global_key_index + 1
 
                 key_tmp_value = 0
                 for switch_collection in switch_collection_list:

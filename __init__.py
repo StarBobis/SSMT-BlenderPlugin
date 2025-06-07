@@ -14,8 +14,6 @@ from .properties.properties_extract_model import Properties_ExtractModel
 
 from .migoto.migoto_import import *
 
-# SSMT开发
-from .ui.panel_ssmt import *
 
 bl_info = {
     "name": "SSMT",

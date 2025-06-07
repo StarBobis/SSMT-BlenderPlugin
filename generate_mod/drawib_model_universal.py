@@ -18,8 +18,10 @@ from ..utils.obj_utils import ExtractedObject, ExtractedObjectHelper
 from ..migoto.migoto_format import M_DrawIndexed, TextureReplace,ObjModel
 from ..config.import_config import ImportConfig
 from .component_model import ComponentModel
-# 
-# 
+
+from .m_counter import M_Counter
+
+
 class DrawIBModelUniversal:
     '''
     这个代表了一个DrawIB的Mod导出模型
@@ -27,18 +29,14 @@ class DrawIBModelUniversal:
     每个游戏的DrawIBModel都是不同的，但是一部分是可以复用的
     (例如WWMI就有自己的一套DrawIBModel)
     '''
-    def __initlialize_drawib_item(self,drawib_collection_name:str):
-        drawib_collection_name_splits = CollectionUtils.get_clean_collection_name(drawib_collection_name).split("_")
-        self.draw_ib = drawib_collection_name_splits[0]
-        self.draw_ib_alias = drawib_collection_name_splits[1]
 
 
     # 通过default_factory让每个类的实例的变量分割开来，不再共享类的静态变量
-    def __init__(self,draw_ib_collection,merge_obj:bool = False,global_key_index:int = 0):
+    def __init__(self,draw_ib_collection,merge_obj:bool = False):
         '''
         根据3Dmigoto的架构设计，每个DrawIB都是一个独立的Mod
         '''
-        self.global_key_index = global_key_index
+  
 
         # (1) 从集合名称中获取当前DrawIB和别名
         self.__initlialize_drawib_item(drawib_collection_name=draw_ib_collection.name)
@@ -68,8 +66,8 @@ class DrawIBModelUniversal:
         # 使用全局key索引，确保存在多个Component时声明的key不会重复
         self.key_name_mkey_dict:dict[str,M_Key] = {}
         for component_collection in component_collection_list:
-            component_model = ComponentModel(component_collection=component_collection,global_key_index=self.global_key_index,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
-            self.global_key_index = component_model.global_key_index
+            component_model = ComponentModel(component_collection=component_collection,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
+            
 
             self.component_model_list.append(component_model)
             self.component_name_component_model_dict[component_model.component_name] = component_model
@@ -106,6 +104,10 @@ class DrawIBModelUniversal:
         self.combine_partname_ib_resource_and_filename_dict()
         self.write_buffer_files()
 
+    def __initlialize_drawib_item(self,drawib_collection_name:str):
+        drawib_collection_name_splits = CollectionUtils.get_clean_collection_name(drawib_collection_name).split("_")
+        self.draw_ib = drawib_collection_name_splits[0]
+        self.draw_ib_alias = drawib_collection_name_splits[1]
 
 
     def parse_categoryname_bytelist_dict_3(self):
