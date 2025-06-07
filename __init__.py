@@ -40,7 +40,7 @@ register_classes = (
     DBMTImportAllFromCurrentWorkSpace,
     SSMTImportAllFromCurrentWorkSpace,
     # 生成Mod功能
-    ExportModHonkaiStarRail32,
+    SSMTGenerateModHSR32,
     # DBMTExportUnityVSModToWorkSpaceSeperated,
     # DBMTExportUnityCSModToWorkSpaceSeperated,
     GenerateModWWMI,

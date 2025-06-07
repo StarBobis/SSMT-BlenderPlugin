@@ -3,94 +3,18 @@ import math
 import os
 
 from .m_ini_builder import *
-from .m_ini_helper import M_IniHelper
+from .m_ini_helper import M_IniHelperV2
 from .drawib_model_universal import DrawIBModelUniversal
 from ..config.main_config import GlobalConfig
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..migoto.migoto_format import TextureReplace
+from .m_counter import M_Counter
 
-class M_IniHelperV2:
-    @classmethod
-    def move_slot_style_textures(cls,draw_ib_model:DrawIBModelUniversal):
-        '''
-        Move all textures from extracted game type folder to generate mod Texture folder.
-        Only works in default slot style texture.
-        '''
-        if Properties_GenerateMod.forbid_auto_texture_ini():
-            return
-        
-        for texture_filename in draw_ib_model.TextureResource_Name_FileName_Dict.values():
-            # 只有槽位风格会移动到目标位置
-            if "_Slot_" in texture_filename:
-                target_path = GlobalConfig.path_generatemod_texture_folder(draw_ib=draw_ib_model.draw_ib) + texture_filename
-                source_path = draw_ib_model.import_config.extract_gametype_folder_path + texture_filename
-                
-                # only overwrite when there is no texture file exists.
-                if not os.path.exists(target_path):
-                    shutil.copy2(source_path,target_path)
-
-    @classmethod
-    def add_switchkey_constants_section(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
-        '''
-        声明SwitchKey的Constants变量
-        '''
-        if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
-            constants_section = M_IniSection(M_SectionType.Constants)
-            constants_section.SectionName = "Constants"
-            constants_section.append("global $active" + str(global_generate_mod_number))
-            for mkey in draw_ib_model.key_name_mkey_dict.values():
-                key_str = "global persist " + mkey.key_name + " = " + str(mkey.initialize_value)
-                constants_section.append(key_str) 
-
-            ini_builder.append_section(constants_section)
-
-    @classmethod
-    def add_switchkey_present_section(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
-        '''
-        声明$active激活变量
-        '''
-        if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
-            present_section = M_IniSection(M_SectionType.Present)
-            present_section.SectionName = "Present"
-            present_section.append("post $active" + str(global_generate_mod_number) + " = 0")
-            ini_builder.append_section(present_section)
-    
-    @classmethod
-    def add_switchkey_sections(cls,ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number):
-        '''
-        声明按键切换和按键开关的变量 Key Section
-        '''
-        key_number = 0
-        if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
-
-            for mkey in draw_ib_model.key_name_mkey_dict.values():
-                key_section = M_IniSection(M_SectionType.Key)
-                key_section.append("[KeySwap_" + str(global_generate_mod_number) + "_" + str(key_number) + "]")
-                if draw_ib_model.d3d11GameType.GPU_PreSkinning:
-                    key_section.append("condition = $active" + str(global_generate_mod_number) + " == 1")
-                key_section.append("key = " + mkey.key_value)
-                key_section.append("type = cycle")
-
-                key_value_number = len(mkey.value_list)
-                key_cycle_str = ""
-                for i in range(key_value_number):
-                    if i < key_value_number + 1:
-                        key_cycle_str = key_cycle_str + str(i) + ","
-                    else:
-                        key_cycle_str = key_cycle_str + str(i)
-                key_section.append(mkey.key_name + " = " + key_cycle_str)
-                key_section.new_line()
-                ini_builder.append_section(key_section)
-
-                key_number = key_number + 1
 
         
 
 class M_UnityIniModelV2:
     drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal] = {}
-
-    # 这个数量代表一共生成了几个DrawIB的Mod，每个DrawIB都是一个Mod
-    global_generate_mod_number = 0
 
     # VertexLimitRaise导致的缩进
     vlr_filter_index_indent = ""
@@ -106,8 +30,6 @@ class M_UnityIniModelV2:
         '''
         cls.drawib_drawibmodel_dict = {}
         
-
-        cls.global_generate_mod_number = 0
 
         cls.vlr_filter_index_indent = ""
 
@@ -146,7 +68,7 @@ class M_UnityIniModelV2:
             if Properties_GenerateMod.vertex_limit_raise_add_filter_index():
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Texcoord"]:
                     if cls.vlr_filter_index_indent != "":
-                        texture_override_vb_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                        texture_override_vb_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
                         filterindex_indent_prefix = "  "
 
             # 遍历获取所有在当前分类hash下进行替换的分类，并添加对应的资源替换
@@ -174,7 +96,7 @@ class M_UnityIniModelV2:
             # 分支架构，如果是Position则需提供激活变量
             if category_name == d3d11GameType.CategoryDrawCategoryDict["Position"]:
                 if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
-                    texture_override_vb_section.append("$active" + str(cls.global_generate_mod_number) + " = 1")
+                    texture_override_vb_section.append("$active" + str(M_Counter.generated_mod_number) + " = 1")
 
             texture_override_vb_section.new_line()
 
@@ -207,7 +129,7 @@ class M_UnityIniModelV2:
             texture_override_ib_section.append("match_first_index = " + match_first_index)
 
             if cls.vlr_filter_index_indent != "":
-                texture_override_ib_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                texture_override_ib_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
 
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "handling = skip")
 
@@ -308,7 +230,7 @@ class M_UnityIniModelV2:
             
             if Properties_GenerateMod.vertex_limit_raise_add_filter_index():
                 # 用户可能已经习惯了3000
-                vertexlimit_section.append("filter_index = " + str(3000 + cls.global_generate_mod_number))
+                vertexlimit_section.append("filter_index = " + str(3000 + M_Counter.generated_mod_number))
                 cls.vlr_filter_index_indent = "  "
 
             vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
@@ -400,7 +322,7 @@ class M_UnityIniModelV2:
                 filterindex_indent_prefix = ""
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Texcoord"]:
                     if cls.vlr_filter_index_indent != "":
-                        texture_override_vb_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                        texture_override_vb_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
 
                 # 遍历获取所有在当前分类hash下进行替换的分类，并添加对应的资源替换
                 for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
@@ -431,7 +353,7 @@ class M_UnityIniModelV2:
                 # 分支架构，如果是Position则需提供激活变量
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Position"]:
                     if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
-                        texture_override_vb_section.append("$active" + str(cls.global_generate_mod_number) + " = 1")
+                        texture_override_vb_section.append("$active" + str(M_Counter.generated_mod_number) + " = 1")
 
                 texture_override_vb_section.new_line()
             config_ini_builder.append_section(texture_override_vb_section)
@@ -457,7 +379,7 @@ class M_UnityIniModelV2:
             texture_override_ib_section.append("checktextureoverride = vb1")
 
             if cls.vlr_filter_index_indent != "":
-                texture_override_ib_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                texture_override_ib_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
 
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "handling = skip")
 
@@ -629,7 +551,7 @@ class M_UnityIniModelV2:
         '''
         config_ini_builder = M_IniBuilder()
 
-        M_IniHelper.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
+        M_IniHelperV2.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
 
 
         if Properties_GenerateMod.slot_style_texture_add_filter_index():
@@ -638,9 +560,9 @@ class M_UnityIniModelV2:
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
-            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
-            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number) 
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
 
             if GlobalConfig.gamename != "HSR":
                 cls.add_unity_vs_texture_override_vlr_section(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
@@ -655,7 +577,7 @@ class M_UnityIniModelV2:
 
             M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
-            cls.global_generate_mod_number = cls.global_generate_mod_number + 1
+            M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
 
         cls.add_unity_cs_vertex_shader_check(ini_builder=config_ini_builder)
 
@@ -678,7 +600,7 @@ class M_UnityIniModelV2:
         '''
         config_ini_builder = M_IniBuilder()
 
-        M_IniHelper.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
+        M_IniHelperV2.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
 
         if Properties_GenerateMod.slot_style_texture_add_filter_index():
             cls.add_texture_filter_index(ini_builder= config_ini_builder)
@@ -686,9 +608,9 @@ class M_UnityIniModelV2:
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
-            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
-            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number) 
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
         
             cls.add_unity_vs_texture_override_vlr_section(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_unity_vs_texture_override_vb_sections(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
@@ -698,7 +620,7 @@ class M_UnityIniModelV2:
 
             M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
-            cls.global_generate_mod_number = cls.global_generate_mod_number + 1
+            M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
 
 
 

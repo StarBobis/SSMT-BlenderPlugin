@@ -2,24 +2,17 @@ import shutil
 import math
 
 from .m_ini_builder import *
-from .m_drawib_model import *
-from .m_ini_helper import M_IniHelper
-
+from .drawib_model_universal import DrawIBModelUniversal
+from .m_ini_helper import M_IniHelperV2
+from ..config.main_config import GlobalConfig
 from ..properties.properties_generate_mod import Properties_GenerateMod
-
-
+from .m_counter import M_Counter
 
 class M_HSRIniModel:
     '''
     此模板用于崩铁3.2或以上版本，目前仍在测试中，将跟随老外的XXMI-Tools同步更新。
     '''
-    drawib_drawibmodel_dict:dict[str,DrawIBModel] = {}
-    # 代表全局声明了几个Key
-    global_key_index_constants = 0
-    # 
-    global_key_index_logic = 0
-    # 这个数量代表一共生成了几个DrawIB的Mod，每个DrawIB都是一个Mod
-    global_generate_mod_number = 0
+    drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal] = {}
     # VertexLimitRaise导致的缩进
     vlr_filter_index_indent = ""
     # 贴图filter_index功能
@@ -32,17 +25,12 @@ class M_HSRIniModel:
         在生成Mod之前必须调用这个初始化所有内容，因为静态类的变量是全局共享的.
         '''
         cls.drawib_drawibmodel_dict = {}
-        
-        cls.global_key_index_constants = 0
-        cls.global_key_index_logic = 0
-        cls.global_generate_mod_number = 0
-
         cls.vlr_filter_index_indent = ""
         cls.texture_hash_filter_index_dict = {}
 
 
     @classmethod
-    def add_vertex_limit_raise_section(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModel):
+    def add_vertex_limit_raise_section(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal):
         '''
         VertexLimitRaise部分，用于突破顶点数限制
         '''
@@ -53,7 +41,7 @@ class M_HSRIniModel:
             vertexlimit_section = M_IniSection(M_SectionType.TextureOverrideVertexLimitRaise)
 
             vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_LimitDraw" + "]")
-            vertexlimit_section.append("hash = " + draw_ib_model.vertex_limit_hash)
+            vertexlimit_section.append("hash = " + draw_ib_model.import_config.vertex_limit_hash)
 
             vertexlimit_section.append("; override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
             vertexlimit_section.append("; override_vertex_count = " + str(draw_ib_model.draw_number))
@@ -69,7 +57,7 @@ class M_HSRIniModel:
 
 
     @classmethod
-    def add_resource_texture_sections(cls,ini_builder,draw_ib_model:DrawIBModel):
+    def add_resource_texture_sections(cls,ini_builder,draw_ib_model:DrawIBModelUniversal):
         '''
         Add texture resource.
         只有槽位风格贴图会用到，因为Hash风格贴图有专门的方法去声明这个。
@@ -88,7 +76,7 @@ class M_HSRIniModel:
 
 
     @classmethod
-    def add_texture_override_vb_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModel):
+    def add_texture_override_vb_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal):
         # 声明TextureOverrideVB部分，只有使用GPU-PreSkinning时是直接替换hash对应槽位
         d3d11GameType = draw_ib_model.d3d11GameType
         draw_ib = draw_ib_model.draw_ib
@@ -97,7 +85,7 @@ class M_HSRIniModel:
             texture_override_vb_section = M_IniSection(M_SectionType.TextureOverrideVB)
             texture_override_vb_section.append("; " + draw_ib + " ----------------------------")
             for category_name in d3d11GameType.OrderedCategoryNameList:
-                category_hash = draw_ib_model.category_hash_dict[category_name]
+                category_hash = draw_ib_model.import_config.category_hash_dict[category_name]
                 category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
 
                 texture_override_vb_namesuffix = "VB_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_" + category_name
@@ -113,7 +101,7 @@ class M_HSRIniModel:
                 filterindex_indent_prefix = ""
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Texcoord"]:
                     if cls.vlr_filter_index_indent != "":
-                        texture_override_vb_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                        texture_override_vb_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
 
                 # 遍历获取所有在当前分类hash下进行替换的分类，并添加对应的资源替换
                 for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
@@ -122,17 +110,7 @@ class M_HSRIniModel:
                      
                     if category_name == draw_category_name:
                         if original_category_name == "Position":
-                            # XXMI中直接使用Blend进行渲染了，Position啥也不干，不需要了直接。
                             pass
-
-                            # texture_override_vb_section.append(blend_category_slot + " = Resource" + draw_ib + "Blend")
-                            # texture_override_vb_section.append("if DRAW_TYPE == 1")
-                            # texture_override_vb_section.append("  " + position_category_slot + " = Resource" + draw_ib + "Position")
-
-                            # dispatch_number = int(math.ceil(draw_ib_model.draw_number / 64)) + 1
-                            # texture_override_vb_section.append("draw = " + str(dispatch_number) + ", 0")
-                            # texture_override_vb_section.append("endif")
-
                         elif original_category_name == "Blend":
                             texture_override_vb_section.append("vb2 = Resource" + draw_ib + "Blend")
                             texture_override_vb_section.append("if DRAW_TYPE == 1")
@@ -160,15 +138,15 @@ class M_HSRIniModel:
                 
                 # 分支架构，如果是Position则需提供激活变量
                 if category_name == d3d11GameType.CategoryDrawCategoryDict["Position"]:
-                    if draw_ib_model.key_number != 0:
-                        texture_override_vb_section.append("$active" + str(cls.global_generate_mod_number) + " = 1")
+                    if len(draw_ib_model.key_name_mkey_dict.keys()) != 0:
+                        texture_override_vb_section.append("$active" + str(M_Counter.generated_mod_number) + " = 1")
 
                 texture_override_vb_section.new_line()
             config_ini_builder.append_section(texture_override_vb_section)
             
             
     @classmethod
-    def add_texture_override_ib_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModel):
+    def add_texture_override_ib_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal):
         texture_override_ib_section = M_IniSection(M_SectionType.TextureOverrideIB)
         draw_ib = draw_ib_model.draw_ib
         d3d11GameType = draw_ib_model.d3d11GameType
@@ -180,9 +158,9 @@ class M_HSRIniModel:
 
         # texture_override_ib_section.append("drawindexed = auto")
 
-        for count_i in range(len(draw_ib_model.part_name_list)):
-            match_first_index = draw_ib_model.match_first_index_list[count_i]
-            part_name = draw_ib_model.part_name_list[count_i]
+        for count_i in range(len(draw_ib_model.import_config.part_name_list)):
+            match_first_index = draw_ib_model.import_config.match_first_index_list[count_i]
+            part_name = draw_ib_model.import_config.part_name_list[count_i]
 
             style_part_name = "Component" + part_name
             ib_resource_name = "Resource_" + draw_ib+ "_" + style_part_name
@@ -194,7 +172,7 @@ class M_HSRIniModel:
             texture_override_ib_section.append("handling = skip")
 
             if cls.vlr_filter_index_indent != "":
-                texture_override_ib_section.append("if vb0 == " + str(3000 + cls.global_generate_mod_number))
+                texture_override_ib_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
 
             # texture_override_ib_section.append(cls.vlr_filter_index_indent + "handling = skip")
 
@@ -231,12 +209,20 @@ class M_HSRIniModel:
 
             # Component DrawIndexed输出
             component_name = "Component " + part_name 
-            model_collection_list = draw_ib_model.componentname_modelcollection_list_dict[component_name]
 
-            drawindexed_list, added_global_key_index_logic = M_IniHelper.get_switchkey_drawindexed_list(model_collection_list=model_collection_list, draw_ib_model=draw_ib_model,vlr_filter_index_indent=cls.vlr_filter_index_indent,input_global_key_index_logic=cls.global_key_index_logic)
-            for drawindexed_str in drawindexed_list:
-                texture_override_ib_section.append(drawindexed_str)
-            cls.global_key_index_logic = added_global_key_index_logic
+            component_model = draw_ib_model.component_name_component_model_dict[component_name]
+            for obj_model in component_model.final_ordered_draw_obj_model_list:
+                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
+
+                if obj_model.condition.condition_str != "":
+                    
+                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
+                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
+                    texture_override_ib_section.append("endif")
+                else:
+                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
+                
+                texture_override_ib_section.new_line()
             
             if cls.vlr_filter_index_indent != "":
                 texture_override_ib_section.append("endif")
@@ -246,7 +232,7 @@ class M_HSRIniModel:
         config_ini_builder.append_section(texture_override_ib_section)
 
     @classmethod
-    def add_unity_cs_resource_vb_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModel):
+    def add_unity_cs_resource_vb_sections(cls,config_ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal):
         '''
         Add Resource VB Section (HSR3.2)
         '''
@@ -276,8 +262,8 @@ class M_HSRIniModel:
 
         We default use R32_UINT because R16_UINT have a very small number limit.
         '''
-        for count_i in range(len(draw_ib_model.part_name_list)):
-            partname = draw_ib_model.part_name_list[count_i]
+        for count_i in range(len(draw_ib_model.import_config.part_name_list)):
+            partname = draw_ib_model.import_config.part_name_list[count_i]
             style_partname = "Component" + partname
             ib_resource_name = "Resource_" + draw_ib_model.draw_ib + "_" + style_partname
 
@@ -333,7 +319,7 @@ class M_HSRIniModel:
 
 
     @classmethod
-    def add_hsr32_resource(cls,ini_builder,draw_ib_model:DrawIBModel):
+    def add_hsr32_resource(cls,ini_builder,draw_ib_model:DrawIBModelUniversal):
         '''
         添加$_blend_ 和 RWStructuredBuffer的Resource
         '''
@@ -352,7 +338,7 @@ class M_HSRIniModel:
         '''
         config_ini_builder = M_IniBuilder()
 
-        M_IniHelper.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
+        M_IniHelperV2.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
 
 
         if Properties_GenerateMod.slot_style_texture_add_filter_index():
@@ -364,10 +350,9 @@ class M_HSRIniModel:
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelper.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number,global_key_index_constants=cls.global_key_index_constants)
-            M_IniHelper.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number)
-            global_key_index_counstants_added = M_IniHelper.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,global_generate_mod_number=cls.global_generate_mod_number,input_global_key_index_constants=cls.global_key_index_constants) 
-            cls.global_key_index_constants = global_key_index_counstants_added
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
 
             # 每个drawIB添加一个resource
             cls.add_hsr32_resource(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
@@ -382,9 +367,9 @@ class M_HSRIniModel:
             cls.add_unity_cs_resource_vb_sections(config_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_resource_texture_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
 
-            M_IniHelper.move_slot_style_textures(draw_ib_model=draw_ib_model)
+            M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
-            cls.global_generate_mod_number = cls.global_generate_mod_number + 1
+            M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
 
         config_ini_builder.save_to_file(GlobalConfig.path_generate_mod_folder() + GlobalConfig.workspacename + ".ini")
         

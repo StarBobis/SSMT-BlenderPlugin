@@ -231,9 +231,9 @@ class PanelButtons(bpy.types.Panel):
         layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
 
         if GlobalConfig.gamename == "HSR" :
-            layout.operator("dbmt.export_mod_hsr_32",text="生成XXMI格式Mod",icon='EXPORT')
+            layout.operator("ssmt.generate_mod_hsr_32",text="生成XXMI格式Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "AILIMIT":
-            layout.operator("dbmt.export_mod_hsr_32",text="生成HSR加载器格式Mod",icon='EXPORT')
+            layout.operator("ssmt.generate_mod_hsr_32",text="生成HSR加载器格式Mod",icon='EXPORT')
             # layout.operator("dbmt.export_unity_cs_mod_to_workspace_seperated",text="生成DBMT自带加载器格式Mod",icon='EXPORT')
             layout.operator("ssmt.generate_mod_unity_cs",text="生成DBMT自带加载器格式Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "YYSLS" or GlobalConfig.gamename == "IdentityV":
@@ -243,15 +243,9 @@ class PanelButtons(bpy.types.Panel):
             layout.operator("herta.export_mod_wwmi",text="生成Mod",icon='EXPORT')
         else:
             if GlobalConfig.get_game_category() == GameCategory.UnityVS:
-                # layout.operator("dbmt.export_unity_vs_mod_to_workspace_seperated")
                 layout.operator("ssmt.generate_mod_unity_vs")
             elif GlobalConfig.get_game_category() == GameCategory.UnityCS:
-                # layout.operator("dbmt.export_unity_cs_mod_to_workspace_seperated")
                 layout.operator("ssmt.generate_mod_unity_cs")
-            elif GlobalConfig.get_game_category() == GameCategory.UnrealVS:
-                layout.operator("dbmt.export_unreal_vs_mod_to_workspace")
-            elif GlobalConfig.get_game_category() == GameCategory.UnrealCS:
-                layout.operator("dbmt.export_unreal_cs_mod_to_workspace")
             else:
                 layout.label(text= "Generate Mod for " + GlobalConfig.gamename + " Not Supported Yet.")
 
