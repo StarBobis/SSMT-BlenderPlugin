@@ -60,7 +60,7 @@ class M_IniHelperV2:
                         key_cycle_str = key_cycle_str + str(i)
                 key_section.append(mkey.key_name + " = " + key_cycle_str)
                 key_section.new_line()
-        ini_builder.append_section(key_section)
+                ini_builder.append_section(key_section)
 
         
 
