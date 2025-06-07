@@ -15,6 +15,13 @@ from .migoto_binary_file import D3D11Element
 
 from dataclasses import dataclass, field, asdict
 
+class TextureReplace:
+    def  __init__(self):
+        self.resource_name = ""
+        self.filter_index = 0
+        self.hash = ""
+        self.style = ""
+
 class M_DrawIndexed:
     def __init__(self) -> None:
         self.DrawNumber = ""
@@ -33,19 +40,55 @@ class M_DrawIndexed:
     def get_draw_str(self) ->str:
         return "drawindexed = " + self.DrawNumber + "," + self.DrawOffsetIndex +  "," + self.DrawStartIndex
 
-class TextureReplace:
-    def  __init__(self):
-        self.resource_name = ""
-        self.filter_index = 0
-        self.hash = ""
-        self.style = ""
+class M_Key:
+    '''
+    key_name 声明的key名称，一般按照声明顺序为$swapkey + 数字
+    key_value 具体的按键VK值
+    '''
 
+    def __init__(self):
+        self.key_name = ""
+        self.key_value = ""
+        self.value_list:list[int] = []
+        self.initialize_value = 0
+
+        # 用于chain_key_list中传递使用，
+        self.tmp_value = 0
+
+    def __str__(self):
+        return (f"M_Key(key_name='{self.key_name}', key_value='{self.key_value}', "
+                f"value_list={self.value_list}, initialize_value={self.initialize_value}, "
+                f"tmp_value={self.tmp_value})")
+    
+class M_Condition:
+    '''
+    
+    '''
+    def __init__(self,work_key_list:list[M_Key] = []):
+        self.work_key_list = work_key_list
+
+        # 计算出生效的ConditionStr
+        condition_str = ""
+        if len(self.work_key_list) != 0:
+            for work_key in self.work_key_list:
+                single_condition:str = work_key.key_name + " == " + work_key.tmp_value
+                condition_str = condition_str + single_condition + " && "
+            # 移除结尾的最后四个字符 " && "
+            condition_str = condition_str[:-4] 
+        
+        self.condition_str = condition_str
+
+
+    
 class ObjModel:
     def __init__(self):
         self.ib = []
         self.category_buffer_dict = {}
         self.index_vertex_id_dict = {} # 仅用于WWMI的索引顶点ID字典，key是顶点索引，value是顶点ID，默认可以为None
         self.obj_name = ""
+        self.condition:M_Condition = M_Condition()
+        self.drawindexed_obj:M_DrawIndexed = M_DrawIndexed()
+        
 
 class DrawIBItem:
     def __init__(self):

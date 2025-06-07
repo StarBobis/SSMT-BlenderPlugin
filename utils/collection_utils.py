@@ -9,6 +9,16 @@ class ModelCollection:
         self.obj_name_list:list[str] = []
 
 class CollectionColor:
+    '''
+    WorkSpaceCollectionColor 【工作空间集合】
+    DrawIBCollectionColor 【DrawIB集合】
+    ComponentCollectionColor 【Component集合】
+    
+    GroupCollection 【组集合】
+    ToggleCollection 【按键开关集合】
+    SwitchCollection 【按键切换集合】
+
+    '''
     White = "NONE"
     Red = "COLOR_01"
     Orange = "COLOR_02"
@@ -18,6 +28,15 @@ class CollectionColor:
     Purple = "COLOR_06"
     Pink = "COLOR_07"
     Brown = "COLOR_08"
+
+    WorkSpaceCollectionColor = "COLOR_01"
+    DrawIBCollectionColor = "COLOR_07"
+    ComponentCollectionColor = "COLOR_05"
+
+    GroupCollection = "NONE"
+    ToggleCollection = "COLOR_03" 
+    SwitchCollection = "COLOR_04"
+    
 
 class CollectionUtils:
     @classmethod

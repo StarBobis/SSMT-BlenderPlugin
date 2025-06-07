@@ -8,6 +8,8 @@ from ..generate_mod.ini_model_hsr import M_HSRIniModel
 from ..generate_mod.ini_model_wwmi import M_WWMIIniModel
 from ..generate_mod.ini_model_ctx import M_CTX_IniModel
 
+from ..generate_mod.drawib_model_universal import DrawIBModelUniversal
+
 
 class SSMTGenerateModUnityVS(bpy.types.Operator):
     bl_idname = "ssmt.generate_mod_unity_vs"
@@ -34,7 +36,7 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModel(draw_ib_collection,False)
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection,False)
             M_UnityIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod

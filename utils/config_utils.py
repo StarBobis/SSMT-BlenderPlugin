@@ -15,6 +15,36 @@ class DrawIBPair:
 
 
 class ConfigUtils:
+
+    '''
+    This is a ini generate helper class to reuse functions.
+    '''
+    key_list = ["x","c","v","b","n","m","j","k","l","o","p","[","]",
+                "x","c","v","b","n","m","j","k","l","o","p","[","]",
+                "x","c","v","b","n","m","j","k","l","o","p","[","]"]
+
+    @classmethod
+    def get_mod_switch_key(cls,key_index:int):
+        '''
+        Default mod switch/toggle key.
+        '''
+        
+        # 尝试读取Setting.json里的设置，解析错误就还使用默认的
+        try:
+            setting_json_dict = JsonUtils.LoadFromFile(GlobalConfig.path_main_json())
+            print(setting_json_dict)
+            mod_switch_key = str(setting_json_dict["ModSwitchKey"])
+            mod_switch_key_list = mod_switch_key.split(",")
+            print(mod_switch_key_list)
+            switch_key_list:list[str] = []
+            for switch_key_str in mod_switch_key_list:
+                switch_key_list.append(switch_key_str[1:-1])
+            cls.key_list = switch_key_list
+        except Exception:
+            print("解析自定义SwitchKey失败")
+
+        return cls.key_list[key_index]
+
     @classmethod
     def get_extract_drawib_list_from_workspace_config_json(cls) -> list[DrawIBPair]:
         '''
