@@ -1,5 +1,6 @@
 import shutil
 import math
+import os
 
 from .m_ini_builder import *
 from .m_ini_helper import M_IniHelper
@@ -9,6 +10,25 @@ from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..migoto.migoto_format import TextureReplace
 
 class M_IniHelperV2:
+    @classmethod
+    def move_slot_style_textures(cls,draw_ib_model:DrawIBModelUniversal):
+        '''
+        Move all textures from extracted game type folder to generate mod Texture folder.
+        Only works in default slot style texture.
+        '''
+        if Properties_GenerateMod.forbid_auto_texture_ini():
+            return
+        
+        for texture_filename in draw_ib_model.TextureResource_Name_FileName_Dict.values():
+            # 只有槽位风格会移动到目标位置
+            if "_Slot_" in texture_filename:
+                target_path = GlobalConfig.path_generatemod_texture_folder(draw_ib=draw_ib_model.draw_ib) + texture_filename
+                source_path = draw_ib_model.import_config.extract_gametype_folder_path + texture_filename
+                
+                # only overwrite when there is no texture file exists.
+                if not os.path.exists(target_path):
+                    shutil.copy2(source_path,target_path)
+
     @classmethod
     def add_switchkey_constants_section(cls,ini_builder,draw_ib_model:DrawIBModelUniversal,global_generate_mod_number,global_key_index_constants):
         '''
@@ -630,7 +650,7 @@ class M_UnityIniModelV2:
             cls.add_unity_cs_resource_vb_sections(config_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_resource_texture_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
 
-            M_IniHelper.move_slot_style_textures(draw_ib_model=draw_ib_model)
+            M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
             cls.global_generate_mod_number = cls.global_generate_mod_number + 1
 
@@ -673,7 +693,7 @@ class M_UnityIniModelV2:
             cls.add_unity_vs_resource_vb_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_resource_texture_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
 
-            M_IniHelper.move_slot_style_textures(draw_ib_model=draw_ib_model)
+            M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
             cls.global_generate_mod_number = cls.global_generate_mod_number + 1
 

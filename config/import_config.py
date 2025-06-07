@@ -37,6 +37,7 @@ class ImportConfig:
 
         # 新版本中，我们把数据类型的信息写到了tmp.json中，这样我们就能够读取tmp.json中的内容来决定生成Mod时的数据类型了。
         extract_gametype_folder_path = GlobalConfig.path_extract_gametype_folder(draw_ib=self.draw_ib,gametype_name=gametypename)
+        self.extract_gametype_folder_path = extract_gametype_folder_path
         tmp_json_path = os.path.join(extract_gametype_folder_path,"tmp.json")
         if os.path.exists(tmp_json_path):
             self.d3d11GameType:D3D11GameType = D3D11GameType(tmp_json_path)
