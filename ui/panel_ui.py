@@ -227,18 +227,17 @@ class PanelButtons(bpy.types.Panel):
         operator_import_ib_vb = layout.operator("import_mesh.migoto_raw_buffers_mmt",icon='IMPORT')
         operator_import_ib_vb.filepath = GlobalConfig.path_workspace_folder()
 
-        layout.operator("dbmt.import_all_from_workspace",icon='IMPORT')
-        layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
+        if GlobalConfig.gamename == "WWMI":
+            layout.operator("dbmt.import_all_from_workspace",icon='IMPORT')
+        else:
+            layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
 
         if GlobalConfig.gamename == "HSR" :
             layout.operator("ssmt.generate_mod_hsr_32",text="生成XXMI格式Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "AILIMIT":
             layout.operator("ssmt.generate_mod_hsr_32",text="生成HSR加载器格式Mod",icon='EXPORT')
-            # layout.operator("dbmt.export_unity_cs_mod_to_workspace_seperated",text="生成DBMT自带加载器格式Mod",icon='EXPORT')
-            layout.operator("ssmt.generate_mod_unity_cs",text="生成DBMT自带加载器格式Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "YYSLS" or GlobalConfig.gamename == "IdentityV":
             layout.operator("dbmt.generate_mod_yysls",text="生成Mod",icon='EXPORT')
-            
         elif GlobalConfig.gamename == "WWMI":
             layout.operator("herta.export_mod_wwmi",text="生成Mod",icon='EXPORT')
         else:
