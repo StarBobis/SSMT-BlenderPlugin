@@ -566,7 +566,7 @@ class M_WWMIIniModel:
         M_IniHelper.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
 
         # Add namespace 
-        M_IniHelper.add_namespace_sections_merged(ini_builder=config_ini_builder, drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
+        
 
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
