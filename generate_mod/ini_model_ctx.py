@@ -221,7 +221,7 @@ class M_CTX_IniModel:
 
             vertexlimit_section_name_suffix =  draw_ib + "_" + draw_ib_model.draw_ib_alias + "_VertexLimitRaise"
             vertexlimit_section.append("[TextureOverride_" + vertexlimit_section_name_suffix + "]")
-            vertexlimit_section.append("hash = " + draw_ib_model.vertex_limit_hash)
+            vertexlimit_section.append("hash = " + draw_ib_model.import_config.vertex_limit_hash)
             
             if Properties_GenerateMod.vertex_limit_raise_add_filter_index():
                 # 用户可能已经习惯了3000

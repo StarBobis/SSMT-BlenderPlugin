@@ -181,12 +181,11 @@ class DrawIBModelUniversal:
                 if drawindexed_obj is not None:
                     LOG.info("Using cached drawindexed object for " + obj_name)
                     # 如果已经存在的情况下，不改变draw_offset，也不改变vertex_number_ib_offset，直接使用就好了
-                    self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
+                    self.__obj_name_drawindexed_dict[obj_name] = drawindexed_obj
                     
                 else:
                     # print("processing: " + obj_name)
-                    ib = self.__obj_name_ib_dict.get(obj_name,None)
-
+                    ib = obj_model.ib
                     # ib的数据类型是list[int]
                     unique_vertex_number_set = set(ib)
                     unique_vertex_number = len(unique_vertex_number_set)
@@ -211,7 +210,7 @@ class DrawIBModelUniversal:
                     drawindexed_obj.DrawOffsetIndex = str(draw_offset)
                     drawindexed_obj.UniqueVertexCount = unique_vertex_number
                     drawindexed_obj.AliasName = "[" + obj_name + "]  (" + str(unique_vertex_number) + ")"
-                    self.obj_name_drawindexed_dict[obj_name] = drawindexed_obj
+                    self.__obj_name_drawindexed_dict[obj_name] = drawindexed_obj
                     draw_offset = draw_offset + draw_number
 
                     obj_name_drawindexedobj_cache_dict[obj_name] = drawindexed_obj
