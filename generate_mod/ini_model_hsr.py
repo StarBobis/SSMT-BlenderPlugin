@@ -40,17 +40,13 @@ class M_HSRIniModel:
         if d3d11GameType.GPU_PreSkinning:
             vertexlimit_section = M_IniSection(M_SectionType.TextureOverrideVertexLimitRaise)
 
-            vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_LimitDraw" + "]")
+            vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_Draw" + "]")
             vertexlimit_section.append("hash = " + draw_ib_model.import_config.vertex_limit_hash)
 
-            vertexlimit_section.append("; override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
-            vertexlimit_section.append("; override_vertex_count = " + str(draw_ib_model.draw_number))
-
-            # TODO 处理多个IB在同一ini中的问题。
-            vertexlimit_section.append("if DRAW_TYPE != 8 && DRAW_TYPE != 1 && $_blend_ > 0")
-            vertexlimit_section.append("  $_blend_ = $_blend_ - 1")
-            vertexlimit_section.append("  this = ref Resource_" + draw_ib + "_DrawCS")
-            vertexlimit_section.append("endif")
+            vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
+            vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+            # 这里步长为4，是因为override_byte_stride * override_vertex_count 后要除以 4来得到 uav的num_elements
+            vertexlimit_section.append("uav_byte_stride = 4")
             vertexlimit_section.new_line()
 
             config_ini_builder.append_section(vertexlimit_section)
@@ -117,14 +113,10 @@ class M_HSRIniModel:
                             texture_override_vb_section.append("  vb0 = Resource" + draw_ib + "Position")
                             texture_override_vb_section.append("draw = " + str(draw_ib_model.draw_number) + ", 0")
                             texture_override_vb_section.append("endif")
-                            texture_override_vb_section.append("Resource_" + draw_ib + "_DrawCS = copy " + "Resource_" + draw_ib + "_DrawCS")
                             texture_override_vb_section.append("if DRAW_TYPE == 8")
                             texture_override_vb_section.append("  Resource\\SRMI\\PositionBuffer = ref Resource" + draw_ib + "PositionCS" )
                             texture_override_vb_section.append("  Resource\\SRMI\\BlendBuffer = ref Resource" + draw_ib + "BlendCS" )
-                            texture_override_vb_section.append("  Resource\\SRMI\\DrawBuffer = ref Resource_" + draw_ib + "_DrawCS" )
-                            texture_override_vb_section.append("  $\\SRMI\\vertcount = " + str(draw_ib_model.draw_number))
-                            texture_override_vb_section.append("elif DRAW_TYPE != 1")
-                            texture_override_vb_section.append("  $_blend_ = 2")
+                            texture_override_vb_section.append("  $\\SRMI\\vertex_count = " + str(draw_ib_model.draw_number))
                             texture_override_vb_section.append("endif")
                             
                         else:
@@ -304,32 +296,9 @@ class M_HSRIniModel:
 
         ini_builder.append_section(texture_filter_index_section)
 
-    @classmethod
-    def add_hsr32_constants(cls,ini_builder):
-        '''
-        添加$_blend_ 和 RWStructuredBuffer的Resource
-        '''
-        constants_section = M_IniSection(M_SectionType.Constants)
-        constants_section.SectionName = "Constants"
-        constants_section.append("global $_blend_ = 0" )
-        
-        ini_builder.append_section(constants_section)
 
 
 
-
-    @classmethod
-    def add_hsr32_resource(cls,ini_builder,draw_ib_model:DrawIBModelUniversal):
-        '''
-        添加$_blend_ 和 RWStructuredBuffer的Resource
-        '''
-        resource_section = M_IniSection(M_SectionType.ResourceBuffer)
-        resource_section.append("[Resource_" + draw_ib_model.draw_ib + "_DrawCS]")
-        resource_section.append("type = RWStructuredBuffer")
-        resource_section.append("array = " + str(draw_ib_model.draw_number))
-        resource_section.append("data = R32_FLOAT 1 2 3 4 5 6 7 8 9 10")
-        resource_section.new_line()
-        ini_builder.append_section(resource_section)
 
     @classmethod
     def generate_unity_cs_config_ini(cls):
@@ -344,9 +313,6 @@ class M_HSRIniModel:
         if Properties_GenerateMod.slot_style_texture_add_filter_index():
             cls.add_texture_filter_index(ini_builder= config_ini_builder)
 
-        # 多个drawib目前测试共用一个就行了。
-        cls.add_hsr32_constants(ini_builder=config_ini_builder)
-
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
@@ -354,8 +320,7 @@ class M_HSRIniModel:
             M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
 
-            # 每个drawIB添加一个resource
-            cls.add_hsr32_resource(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+   
             # [TextureOverrideVertexLimitRaise]
             cls.add_vertex_limit_raise_section(config_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
             # [TextureOverrideVB]

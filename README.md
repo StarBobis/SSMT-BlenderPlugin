@@ -57,3 +57,15 @@ C:\Users\Administrator\AppData\Roaming\Blender Foundation\Blender\4.2\scripts\ad
 
 设计成现在这样就能避免这些问题，用法和声明上都有了统一的规范。
 
+# Jinja2的ini模板问题
+
+我们不模仿XXMI-Tools和WWMI-Tools使用Jinja2的ini模板，
+以便于在生成Mod逻辑发生变更后，能够第一时间通过修改代码来同步特性。
+
+我们的项目尽可能遵循奥卡姆剃刀原理，不引入额外的组件和学习成本，
+尽可能让每个人拿到源码后都能像滑雪一样顺畅的读完整个逻辑并理解大概原理，
+除非到了哪天由于重要的特性不得不引入，否则暂时不加入Jinja2模板ini功能。
+
+
+
+
