@@ -40,7 +40,7 @@ class SSMTGenerateModUnityVS(bpy.types.Operator):
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
 
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection,merge_obj=False)
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
 
             
             M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
@@ -82,7 +82,7 @@ class SSMTGenerateModUnityCS(bpy.types.Operator):
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
 
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection,merge_obj=False)
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
 
             M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
@@ -121,7 +121,7 @@ class SSMTGenerateModHSR32(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection,False)
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
             M_HSRIniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod
@@ -159,7 +159,7 @@ class GenerateModYYSLS(bpy.types.Operator):
             # get drawib
             draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
             draw_ib = draw_ib_alias_name.split("_")[0]
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection,False)
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
             M_CTX_IniModel.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod

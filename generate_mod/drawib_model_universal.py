@@ -32,11 +32,10 @@ class DrawIBModelUniversal:
 
 
     # 通过default_factory让每个类的实例的变量分割开来，不再共享类的静态变量
-    def __init__(self,draw_ib_collection,merge_obj:bool = False):
+    def __init__(self,draw_ib_collection):
         '''
         根据3Dmigoto的架构设计，每个DrawIB都是一个独立的Mod
         '''
-  
 
         # (1) 从集合名称中获取当前DrawIB和别名
         self.__initlialize_drawib_item(drawib_collection_name=draw_ib_collection.name)
@@ -86,11 +85,7 @@ class DrawIBModelUniversal:
         self.total_index_count = 0 # 每个DrawIB都有总的IndexCount数，也就是所有的Component中的所有顶点索引数量
         self.__obj_name_drawindexed_dict:dict[str,M_DrawIndexed] = {} 
 
-        # TODO 这里先完成Seperated架构，后面测试通过再去完成merged架构
-        if GlobalConfig.get_game_category() == GameCategory.UnrealVS or GlobalConfig.get_game_category() == GameCategory.UnrealCS: 
-            # UnrealVS目前只能一个IB
-            self.__read_component_ib_buf_dict_merged()
-        elif GlobalConfig.gamename == "IdentityV":
+        if GlobalConfig.gamename == "IdentityV":
             self.__read_component_ib_buf_dict_merged()
         else:
             self.__read_component_ib_buf_dict_seperated_single()
