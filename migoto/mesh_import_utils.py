@@ -54,7 +54,7 @@ class MeshImportUtils:
 
             if element.SemanticName == "POSITION":
                 if len(data[0]) == 4:
-                    if ([x[3] for x in data] != [1.0] * len(data)):
+                    if ([x[3] for x in data] != [1.0] * len(data)) and ([x[3] for x in data] != [0] * len(data)):
                         # Nico: Blender暂时不支持4D索引，加了也没用，直接不行就报错，转人工处理。
                         raise Fatal('Positions are 4D')
                 positions = [(x[0], x[1], x[2]) for x in data]
@@ -132,6 +132,8 @@ class MeshImportUtils:
                     partname_count = int(mbf.mesh_name.split(" ")[1])
                     print("import partname count: " + str(partname_count))
                     component = extracted_object.components[partname_count]
+        print(len(blend_indices))
+        print(len(blend_weights))
 
         MeshImportUtils.import_vertex_groups(mesh, obj, blend_indices, blend_weights, component)
         MeshImportUtils.import_shapekeys(mesh, obj, shapekeys)
