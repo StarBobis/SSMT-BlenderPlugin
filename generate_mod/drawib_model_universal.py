@@ -296,7 +296,7 @@ class DrawIBModelUniversal:
 
             # Only export if it's not empty.
             if len(ib_buf) == 0:
-                LOG.warning(self.draw_ib + " collection: " + self.component_name + " is hide, skip export ib buf.")
+                LOG.warning(self.draw_ib + " collection: " + component_model.component_name + " is hide, skip export ib buf.")
             else:
                 self.componentname_ibbuf_dict[component_model.component_name] = ib_buf
 

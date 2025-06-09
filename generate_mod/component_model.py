@@ -93,7 +93,7 @@ class ComponentModel:
                 obj_model.category_buffer_dict = category_buffer_dict
                 obj_name_obj_model_cache_dict[obj_name] = obj_model
         
-                final_ordered_draw_obj_model_list:list[ObjModel] = [] 
+        final_ordered_draw_obj_model_list:list[ObjModel] = [] 
         
         for obj_model in self.__ordered_draw_obj_model_list:
             obj_name = obj_model.obj_name
