@@ -236,8 +236,10 @@ class PanelButtons(bpy.types.Panel):
             layout.operator("ssmt.generate_mod_hsr_32",text="生成XXMI格式Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "AILIMIT":
             layout.operator("ssmt.generate_mod_hsr_32",text="生成HSR加载器格式Mod",icon='EXPORT')
-        elif GlobalConfig.gamename == "YYSLS" or GlobalConfig.gamename == "IdentityV":
+        elif GlobalConfig.gamename == "YYSLS" :
             layout.operator("dbmt.generate_mod_yysls",text="生成Mod",icon='EXPORT')
+        elif GlobalConfig.gamename == "IdentityV":
+            layout.operator("dbmt.generate_mod_identityv",text="生成Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "WWMI":
             layout.operator("herta.export_mod_wwmi",text="生成Mod",icon='EXPORT')
         else:

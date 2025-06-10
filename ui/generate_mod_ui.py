@@ -8,6 +8,7 @@ from ..generate_mod.ini_model_hsr import M_HSRIniModel
 from ..generate_mod.ini_model_wwmi import M_WWMIIniModel
 from ..generate_mod.ini_model_ctx import M_CTX_IniModel
 from ..generate_mod.ini_model_unity_v2 import M_UnityIniModelV2
+from ..generate_mod.ini_model_identity_v import M_IniModel_IdentityV
 
 from ..generate_mod.drawib_model_universal import DrawIBModelUniversal
 from ..generate_mod.m_counter import M_Counter
@@ -172,7 +173,45 @@ class GenerateModYYSLS(bpy.types.Operator):
         TimerUtils.End("GenerateMod YYSLS")
         return {'FINISHED'}
     
+class GenerateModIdentityV(bpy.types.Operator):
+    bl_idname = "dbmt.generate_mod_identityv"
+    bl_label = "生成Mod"
+    bl_description = "一键导出当前工作空间集合中的Mod，隐藏显示的模型不会被导出，隐藏的DrawIB为名称的集合不会被导出。"
 
+    def execute(self, context):
+        TimerUtils.Start("GenerateMod IdentityV")
+
+        M_IniModel_IdentityV.initialzie()
+        M_Counter.initialize()
+
+        workspace_collection = bpy.context.collection
+
+        result = CollectionUtils.is_valid_ssmt_workspace_collection(workspace_collection)
+        if result != "":
+            self.report({'ERROR'},result)
+            return {'FINISHED'}
+        
+        for draw_ib_collection in workspace_collection.children:
+            # Skip hide collection.
+            if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
+                continue
+
+            # get drawib
+            draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
+            draw_ib = draw_ib_alias_name.split("_")[0]
+            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
+            M_IniModel_IdentityV.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+
+        # ModModel填充完毕后，开始输出Mod
+        M_IniModel_IdentityV.generate_unity_vs_config_ini()
+
+        self.report({'INFO'},"生成 IdentityV Mod完成")
+
+        CommandUtils.OpenGeneratedModFolder()
+
+        TimerUtils.End("GenerateMod IdentityV")
+        return {'FINISHED'}
+    
 # WWMI
 class GenerateModWWMI(bpy.types.Operator):
     bl_idname = "herta.export_mod_wwmi"

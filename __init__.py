@@ -47,6 +47,7 @@ register_classes = (
     GenerateModYYSLS,
     SSMTGenerateModUnityCS,
     SSMTGenerateModUnityVS,
+    GenerateModIdentityV,
 
     # 模型处理面板
     RemoveAllVertexGroupOperator,

@@ -9,11 +9,10 @@ from .m_counter import M_Counter
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..migoto.migoto_format import TextureReplace
 
-class M_CTX_IniModel:
+class M_IniModel_IdentityV:
     '''
     支持的游戏：
-    - 燕云十六声 YYSLS
-    - 死或生：沙滩排球
+    - 第五人格 IdentityV
     '''
     drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal] = {}
 
@@ -120,7 +119,8 @@ class M_CTX_IniModel:
             ib_resource_name = ""
             ib_resource_name = draw_ib_model.PartName_IBResourceName_Dict.get(part_name,None)
             
-
+            # XXX 第五必须用槽位恢复技术，绕过顶点限制
+            texture_override_ib_section.append("[Resource_IB_Bak_" + str(count_i) + "]")
             texture_override_ib_section.append("[TextureOverride_" + texture_override_name_suffix + "]")
             texture_override_ib_section.append("hash = " + draw_ib)
             texture_override_ib_section.append("match_first_index = " + match_first_index)
@@ -141,6 +141,10 @@ class M_CTX_IniModel:
             # if ZZZ ,use run = CommandListSkinTexture solve slot check problems.
             if GlobalConfig.gamename == "ZZZ" :
                 texture_override_ib_section.append(cls.vlr_filter_index_indent + "run = CommandListSkinTexture")
+
+            texture_override_ib_section.append("Resource_IB_Bak_" + str(count_i) + " = ref ib")
+            # XXX 第五人格特有的check vb0 配合VSCheck使用
+            texture_override_ib_section.append("checktextureoverride = vb0")
 
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)
@@ -190,6 +194,10 @@ class M_CTX_IniModel:
                 
                 texture_override_ib_section.new_line()
             
+            # Draw之后恢复IB
+            texture_override_ib_section.append("ib = Resource_IB_Bak_" + str(count_i))
+
+
             # 补全endif
             if cls.vlr_filter_index_indent:
                 texture_override_ib_section.append("endif")
