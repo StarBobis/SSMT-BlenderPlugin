@@ -181,18 +181,9 @@ class M_IniModel_IdentityV:
 
             component_name = "Component " + part_name 
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
-            for obj_model in component_model.final_ordered_draw_obj_model_list:
-                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-
-                if obj_model.condition.condition_str != "":
-                    
-                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                    texture_override_ib_section.append("endif")
-                else:
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                
-                texture_override_ib_section.new_line()
+            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            for drawindexed_str in drawindexed_str_list:
+                texture_override_ib_section.append(drawindexed_str)
             
             # Draw之后恢复IB
             texture_override_ib_section.append("ib = Resource_IB_Bak_" + str(count_i))

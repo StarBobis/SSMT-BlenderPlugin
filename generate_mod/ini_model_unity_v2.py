@@ -145,6 +145,17 @@ class M_UnityIniModelV2:
             if GlobalConfig.gamename == "ZZZ" :
                 texture_override_ib_section.append(cls.vlr_filter_index_indent + "run = CommandListSkinTexture")
 
+            # 如果不使用GPU-Skinning即为Object类型，此时需要在ibs上面替换对应槽位，在下面替换会导致阴影不正确，必须在上面替换
+            if not d3d11GameType.GPU_PreSkinning:
+                for category_name in d3d11GameType.OrderedCategoryNameList:
+                    category_hash = draw_ib_model.category_hash_dict[category_name]
+                    category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
+
+                    for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
+                        if original_category_name == draw_category_name:
+                            category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
+                            texture_override_ib_section.append(cls.vlr_filter_index_indent + category_original_slot + " = Resource" + draw_ib + original_category_name)
+
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)
 
@@ -166,35 +177,16 @@ class M_UnityIniModelV2:
                             if Properties_GenerateMod.slot_style_texture_add_filter_index():
                                 texture_override_ib_section.append("endif")
 
-            # 如果不使用GPU-Skinning即为Object类型，此时需要在ib下面替换对应槽位
-            if not d3d11GameType.GPU_PreSkinning:
-                for category_name in d3d11GameType.OrderedCategoryNameList:
-                    category_hash = draw_ib_model.category_hash_dict[category_name]
-                    category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
 
-                    for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
-                        if original_category_name == draw_category_name:
-                            category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
-                            texture_override_ib_section.append(cls.vlr_filter_index_indent + category_original_slot + " = Resource" + draw_ib + original_category_name)
 
 
             component_name = "Component " + part_name
 
-
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
-            for obj_model in component_model.final_ordered_draw_obj_model_list:
-                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
 
-                if obj_model.condition.condition_str != "":
-                    
-                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                    texture_override_ib_section.append("endif")
-                else:
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                
-                texture_override_ib_section.new_line()
-
+            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            for drawindexed_str in drawindexed_str_list:
+                texture_override_ib_section.append(drawindexed_str)
 
             # 补全endif
             if cls.vlr_filter_index_indent:
@@ -390,6 +382,18 @@ class M_UnityIniModelV2:
                 texture_override_ib_section.new_line()
                 continue
 
+            # 如果不使用GPU-Skinning即为Object类型，此时需要在ib上面替换对应槽位
+            # 必须在ib上面替换，否则阴影不正确
+            if not d3d11GameType.GPU_PreSkinning:
+                for category_name in d3d11GameType.OrderedCategoryNameList:
+                    category_hash = draw_ib_model.category_hash_dict[category_name]
+                    category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
+
+                    for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
+                        if original_category_name == draw_category_name:
+                            category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
+                            texture_override_ib_section.append(cls.vlr_filter_index_indent + category_original_slot + " = Resource" + draw_ib + original_category_name)
+
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)
 
@@ -402,34 +406,17 @@ class M_UnityIniModelV2:
                         if texture_replace_obj.style == "Slot":
                             texture_override_ib_section.append(cls.vlr_filter_index_indent + slot + " = " + texture_replace_obj.resource_name)
 
-            # 如果不使用GPU-Skinning即为Object类型，此时需要在ib下面替换对应槽位
-            if not d3d11GameType.GPU_PreSkinning:
-                for category_name in d3d11GameType.OrderedCategoryNameList:
-                    category_hash = draw_ib_model.category_hash_dict[category_name]
-                    category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
 
-                    for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
-                        if original_category_name == draw_category_name:
-                            category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
-                            texture_override_ib_section.append(cls.vlr_filter_index_indent + category_original_slot + " = Resource" + draw_ib + original_category_name)
             
 
             # Component DrawIndexed输出
             component_name = "Component " + part_name 
             
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
-            for obj_model in component_model.final_ordered_draw_obj_model_list:
-                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-
-                if obj_model.condition.condition_str != "":
-                    
-                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                    texture_override_ib_section.append("endif")
-                else:
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                
-                texture_override_ib_section.new_line()
+            
+            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            for drawindexed_str in drawindexed_str_list:
+                texture_override_ib_section.append(drawindexed_str)
  
             
             if cls.vlr_filter_index_indent != "":

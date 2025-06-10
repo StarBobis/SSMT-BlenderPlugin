@@ -142,6 +142,13 @@ class M_CTX_IniModel:
             if GlobalConfig.gamename == "ZZZ" :
                 texture_override_ib_section.append(cls.vlr_filter_index_indent + "run = CommandListSkinTexture")
 
+            
+            # 遍历获取所有在当前分类hash下进行替换的分类，并添加对应的资源替换
+            for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
+                category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
+                texture_override_ib_section.append(category_original_slot + " = Resource" + draw_ib + original_category_name)
+
+
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)
 
@@ -177,18 +184,9 @@ class M_CTX_IniModel:
 
             component_name = "Component " + part_name 
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
-            for obj_model in component_model.final_ordered_draw_obj_model_list:
-                texture_override_ib_section.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-
-                if obj_model.condition.condition_str != "":
-                    
-                    texture_override_ib_section.append("if " + obj_model.condition.condition_str)
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                    texture_override_ib_section.append("endif")
-                else:
-                    texture_override_ib_section.append(obj_model.drawindexed_obj.get_draw_str())
-                
-                texture_override_ib_section.new_line()
+            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            for drawindexed_str in drawindexed_str_list:
+                texture_override_ib_section.append(drawindexed_str)
             
             # 补全endif
             if cls.vlr_filter_index_indent:
@@ -407,7 +405,7 @@ class M_CTX_IniModel:
     
             if GlobalConfig.gamename != "YYSLS":
                 cls.add_unity_vs_texture_override_vlr_section(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
-            cls.add_unity_vs_texture_override_vb_sections(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            # cls.add_unity_vs_texture_override_vb_sections(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_unity_vs_texture_override_ib_sections(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_unity_vs_resource_vb_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_resource_texture_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
