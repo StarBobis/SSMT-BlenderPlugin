@@ -46,257 +46,6 @@ class MeshFormatConverter:
     @classmethod
     def convert_4x_float32_to_r16g16b16a16_snorm(cls,input_array):
         return numpy.round(input_array * 32767).astype(numpy.int16)
-
-    # TODO 这里格式和我们的不一样，还得进一步处理，先不测试了。
-    # @classmethod
-    # # converter_normalize_wights_8bit
-    # def normalize_weights(cls,weights: numpy.ndarray, sanitize_weights=True):
-    #     """
-    #     Normalizes 2-dim array of per-vertex float32 weights to uint8 (0-255 range)
-    #     Precision error caused by float truncation is distributed according to precision loss factor
-    #     Precision loss factor is calculated as (weight_float_part / weight_integer_part)
-    #     Weights with bigger precision loss factors are getting 1's from total precision error value
-    #     """
-        
-    #     # Step 1: Normalize weights with 32-bit precision
-
-    #     # Replace any non-float weight values with zeroes
-    #     if sanitize_weights:
-    #         weights = numpy.nan_to_num(weights, nan=0.0, posinf=0.0, neginf=0.0)
-    #     # Ignore weights below minimal 8-bit precision
-    #     weights[weights < 1/255] = 0.0
-    #     # Calculate total weights for each vertex
-    #     weight_sums = weights.sum(axis=1, keepdims=True)
-    #     # Weight vertices without weights (with zero sum) to the first VG
-    #     zero_sums_idx = numpy.where(weight_sums <= 0)[0]
-    #     if len(zero_sums_idx) > 0:
-    #         weights[zero_sums_idx, 0] = 1.0
-    #         weight_sums[zero_sums_idx] = 1.0
-    #     # Normalize weights with 32-bit precision
-    #     weights /= weight_sums
-
-    #     # Step 2: Normalize weights with 8-bit precision
-
-    #     # Normalize weights with 8-bit precision
-    #     # This way is naive, because float part would be discarded on truncation to UINT resulting in total weight not being 255)
-    #     normalized_weights = 255 * weights
-    #     # Make array of weights with stripped float part
-    #     normalized_weights_integer = numpy.floor(normalized_weights)
-
-    #     # Step 3: Calculate precision loss factor
-
-    #     # Make array of weights with stripped integer part
-    #     normalized_weights_float = normalized_weights - normalized_weights_integer
-    #     # Calculate how significant for each VG would be to lose its float part
-    #     # For example, losing 0.250 for 25.250 is 2 times more significant than losing 0.500 for 100.500 (0.010 vs 0.005)
-    #     with numpy.errstate(divide='ignore', invalid='ignore'):
-    #         precision_loss_factor = normalized_weights_float / normalized_weights_integer
-    #     # Replace infinities or NaNs resulted from divizion by zero with 0.0
-    #     precision_loss_factor = numpy.nan_to_num(precision_loss_factor, nan=0.0, posinf=0.0, neginf=0.0)
-
-    #     # Step 4: Calculate precision error
-
-    #     # Calculate error resulted from float part truncation
-    #     precision_error = 255 - normalized_weights_integer.sum(axis=1)
-
-    #     # Step 5: Distribute precision error to weights with highest precision loss factor
-
-    #     # Get index of non-zero precision errors
-    #     non_zero_error_idx = numpy.where(precision_error > 0)[0]
-    #     # Calculate maximum precision error
-    #     max_precision_error = int(max(precision_error[non_zero_error_idx]))
-    #     # Raise exception if maximum precision error exceeds 2-nd dimension size, since truncation cannat cause loss higher than 1 per weight value
-    #     if max_precision_error > normalized_weights_integer.shape[1]:
-    #         raise ValueError(f'8-bit weights normalization failed (max precision error {max_precision_error} exceeds VG count {normalized_weights_integer.shape[1]})')
-
-    #     if len(non_zero_error_idx) > 0:
-    #         # Make first dimension index where precision error is above zero
-    #         target_idx = numpy.arange(normalized_weights_integer.shape[0])[non_zero_error_idx][:, None]
-    #         # Get per-vertex index of descending-sorted precision loss factor
-    #         # So precision loss factor [[0.2, 0.4, 0,3, 0.1], [0.3, 0.0, 0,5, 0.1]] will result in [[1, 2, 0, 3], [2, 0, 3, 1]]
-    #         loss_factor_dsc_idx = numpy.argsort(precision_loss_factor[non_zero_error_idx], axis=1)[:, -max_precision_error:][:, ::-1] 
-    #         # Convert precision error to 2-dim array used to distribute error to integer weights
-    #         # So precision_error of [2, 1, 3] will result in [[1, 1, 0], [1, 0, 0], [1, 1, 1]]
-    #         distributed_precision_error = numpy.arange(max_precision_error) < precision_error[non_zero_error_idx][:, None]
-    #         distributed_precision_error = distributed_precision_error.astype(int)
-    #         # Add ones from distributed_precision_error to normalized_weights_integer according to loss_factor_dsc_idx 
-    #         # So, for each vertex with non-zero error:
-    #         # [[3, 2, 1]] - loss_factor_dsc_idx
-    #         # [[1, 1, 0]] - distributed_precision_error
-    #         # [[119, 35, 47, 52]] (253 total) - normalized_weights_integer[target_idx]
-    #         # [[119, 35, 48, 53]] (255 total) - result
-    #         numpy.add.at(normalized_weights_integer, (target_idx, loss_factor_dsc_idx), distributed_precision_error)
-
-    #     return normalized_weights_integer.astype(numpy.uint8)
-    
-    @classmethod
-    def normalize_weights(cls, weights):
-        '''
-        Normalizes provided list of float weights in an 8-bit friendly way.
-        Returns list of 8-bit integers (0-255) with sum of 255.
-
-        Credit To @SpectrumQT https://github.com/SpectrumQT
-        '''
-
-        
-        total = sum(weights)
-
-        if total == 0:
-            return [0] * len(weights)
-
-        precision_error = 255
-
-        tickets = [0] * len(weights)
-        normalized_weights = [0] * len(weights)
-
-        for index, weight in enumerate(weights):
-            # Ignore zero weight
-            if weight == 0:
-                continue
-
-            weight = weight / total * 255
-            # Ignore weight below minimal precision (1/255)
-            if weight < 1:
-                normalized_weights[index] = 0
-                continue
-
-            # Strip float part from the weight
-            int_weight = 0
-
-            int_weight = int(weight)
-
-            normalized_weights[index] = int_weight
-            # Reduce precision_error by the integer weight value
-            precision_error -= int_weight
-            # Calculate weight 'significance' index to prioritize lower weights with float loss
-            tickets[index] = 255 / weight * (weight - int_weight)
-
-        while precision_error > 0:
-            ticket = max(tickets)
-            if ticket > 0:
-                # Route `1` from precision_error to weights with non-zero ticket value first
-                i = tickets.index(ticket)
-                tickets[i] = 0
-            else:
-                # Route remaining precision_error to highest weight to reduce its impact
-                i = normalized_weights.index(max(normalized_weights))
-            # Distribute `1` from precision_error
-            normalized_weights[i] += 1
-            precision_error -= 1
-
-        return normalized_weights
-    
-    @classmethod
-    def convert_4x_float32_to_r8g8b8a8_unorm_blendweights(cls, input_array):
-        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
-        # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
-
-        result = numpy.zeros_like(input_array, dtype=numpy.uint8)
-
-        for i in range(input_array.shape[0]):
-            weights = input_array[i]
-
-            # 如果权重含有NaN值，则将该行的所有值设置为0。
-            # 因为权重只要是被刷过，就不会出现NaN值。
-            find_nan = False
-            for w in weights:
-                if math.isnan(w):
-                    row_normalized = [0, 0, 0, 0]
-                    result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
-                    find_nan = True
-                    break
-                    # print(weights)
-                    # raise Fatal("NaN found in weights")
-            if find_nan:
-                continue
-            
-            total = sum(weights)
-            if total == 0:
-                row_normalized = [0] * len(weights)
-                result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
-                continue
-
-            precision_error = 255
-
-            tickets = [0] * len(weights)
-            normalized_weights = [0] * len(weights)
-
-            for index, weight in enumerate(weights):
-                # Ignore zero weight
-                if weight == 0:
-                    continue
-
-                weight = weight / total * 255
-                # Ignore weight below minimal precision (1/255)
-                if weight < 1:
-                    normalized_weights[index] = 0
-                    continue
-
-                # Strip float part from the weight
-                int_weight = 0
-
-                int_weight = int(weight)
-
-                normalized_weights[index] = int_weight
-                # Reduce precision_error by the integer weight value
-                precision_error -= int_weight
-                # Calculate weight 'significance' index to prioritize lower weights with float loss
-                tickets[index] = 255 / weight * (weight - int_weight)
-
-            while precision_error > 0:
-                ticket = max(tickets)
-                if ticket > 0:
-                    # Route `1` from precision_error to weights with non-zero ticket value first
-                    idx = tickets.index(ticket)
-                    tickets[idx] = 0
-                else:
-                    # Route remaining precision_error to highest weight to reduce its impact
-                    idx = normalized_weights.index(max(normalized_weights))
-                # Distribute `1` from precision_error
-                normalized_weights[idx] += 1
-                precision_error -= 1
-
-            row_normalized = normalized_weights
-            result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
-        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
-
-        return result
-    
-    @classmethod
-    def convert_4x_float32_to_r8g8b8a8_unorm_blendweights_bk(cls, input_array):
-        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
-        # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
-
-        # TODO 速度很慢，但是numpy自带的方法无法解决权重炸毛的问题，暂时还必须这样
-        # 这里每个顶点都要进行这个操作，总共执行21万次，平均执行4秒，呵呵呵
-
-        result = numpy.zeros_like(input_array, dtype=numpy.uint8)
-
-        for i in range(input_array.shape[0]):
-            weights = input_array[i]
-
-            # 如果权重含有NaN值，则将该行的所有值设置为0。
-            # 因为权重只要是被刷过，就不会出现NaN值。
-            find_nan = False
-            for w in weights:
-                if math.isnan(w):
-                    row_normalized = [0, 0, 0, 0]
-                    result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
-                    find_nan = True
-                    break
-                    # print(weights)
-                    # raise Fatal("NaN found in weights")
-            
-            if not find_nan:
-                # 对每一行调用 normalize_weights 方法
-                
-                row_normalized = cls.normalize_weights(input_array[i])
-                
-                result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
-        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
-
-        return result
-
     
     @classmethod
     def convert_4x_float32_to_r16g16b16a16_unorm(cls, input_array):
@@ -443,3 +192,172 @@ class MeshFormatConverter:
 
         TimerUtils.End("Recalculate COLOR")
         return vb
+
+
+
+    @classmethod
+    def convert_4x_float32_to_r8g8b8a8_unorm_blendweights(cls, input_array):
+        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+        
+        # 创建结果数组
+        result = numpy.zeros_like(input_array, dtype=numpy.uint8)
+        
+        # 处理NaN值
+        nan_mask = numpy.isnan(input_array).any(axis=1)
+        valid_mask = ~nan_mask
+        
+        # 只处理非NaN行
+        valid_input = input_array[valid_mask]
+        if valid_input.size == 0:
+            TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+            return result
+        
+        # 计算每行总和
+        row_sums = valid_input.sum(axis=1, keepdims=True)
+        
+        # 处理零和行
+        zero_sum_mask = (row_sums[:, 0] == 0)
+        non_zero_mask = ~zero_sum_mask
+        
+        # 归一化权重
+        normalized = numpy.zeros_like(valid_input)
+        normalized[non_zero_mask] = valid_input[non_zero_mask] / row_sums[non_zero_mask] * 255.0
+        
+        # 计算整数部分和小数部分
+        int_part = numpy.floor(normalized).astype(numpy.int32)
+        fractional = normalized - int_part
+        
+        # 设置小于1的权重为0
+        small_weight_mask = (normalized < 1) & non_zero_mask[:, numpy.newaxis]
+        int_part[small_weight_mask] = 0
+        fractional[small_weight_mask] = 0
+        
+        # 计算精度误差
+        precision_error = 255 - int_part.sum(axis=1)
+        
+        # 计算tickets
+        tickets = numpy.zeros_like(normalized)
+        with numpy.errstate(divide='ignore', invalid='ignore'):
+            tickets[non_zero_mask] = numpy.where(
+                (normalized[non_zero_mask] >= 1) & (fractional[non_zero_mask] > 0),
+                255 * fractional[non_zero_mask] / normalized[non_zero_mask],
+                0
+            )
+        
+        # 分配精度误差
+        output = int_part.copy()
+        for i in range(precision_error.max()):
+            # 找出需要分配的行
+            need_allocation = (precision_error > 0)
+            if not numpy.any(need_allocation):
+                break
+            
+            # 找出当前行中ticket最大的位置
+            max_ticket_mask = numpy.zeros_like(tickets, dtype=bool)
+            rows = numpy.where(need_allocation)[0]
+            
+            # 对于有ticket的行
+            has_ticket = (tickets[rows] > 0).any(axis=1)
+            if numpy.any(has_ticket):
+                ticket_rows = rows[has_ticket]
+                row_indices = ticket_rows[:, numpy.newaxis]
+                col_indices = tickets[ticket_rows].argmax(axis=1)
+                max_ticket_mask[ticket_rows, col_indices] = True
+                tickets[ticket_rows, col_indices] = 0
+            
+            # 对于没有ticket的行
+            no_ticket = ~has_ticket & need_allocation[rows]
+            if numpy.any(no_ticket):
+                no_ticket_rows = rows[no_ticket]
+                # 找出当前权重最大的位置
+                max_weight_mask = numpy.zeros_like(tickets, dtype=bool)
+                row_indices = no_ticket_rows[:, numpy.newaxis]
+                col_indices = output[no_ticket_rows].argmax(axis=1)
+                max_weight_mask[no_ticket_rows, col_indices] = True
+                max_ticket_mask |= max_weight_mask
+            
+            # 应用分配
+            output[max_ticket_mask] += 1
+            precision_error[need_allocation] -= 1
+        
+        # 将结果存回
+        result[valid_mask] = output.astype(numpy.uint8)
+        
+        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+        return result
+    
+    @classmethod
+    def convert_4x_float32_to_r8g8b8a8_unorm_blendweights_bk2(cls, input_array):
+        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+        # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
+
+        result = numpy.zeros_like(input_array, dtype=numpy.uint8)
+
+        for i in range(input_array.shape[0]):
+            weights = input_array[i]
+
+            # 如果权重含有NaN值，则将该行的所有值设置为0。
+            # 因为权重只要是被刷过，就不会出现NaN值。
+            find_nan = False
+            for w in weights:
+                if math.isnan(w):
+                    row_normalized = [0, 0, 0, 0]
+                    result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+                    find_nan = True
+                    break
+                    # print(weights)
+                    # raise Fatal("NaN found in weights")
+            if find_nan:
+                continue
+            
+            total = sum(weights)
+            if total == 0:
+                row_normalized = [0] * len(weights)
+                result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+                continue
+
+            precision_error = 255
+
+            tickets = [0] * len(weights)
+            normalized_weights = [0] * len(weights)
+
+            for index, weight in enumerate(weights):
+                # Ignore zero weight
+                if weight == 0:
+                    continue
+
+                weight = weight / total * 255
+                # Ignore weight below minimal precision (1/255)
+                if weight < 1:
+                    normalized_weights[index] = 0
+                    continue
+
+                # Strip float part from the weight
+                int_weight = 0
+
+                int_weight = int(weight)
+
+                normalized_weights[index] = int_weight
+                # Reduce precision_error by the integer weight value
+                precision_error -= int_weight
+                # Calculate weight 'significance' index to prioritize lower weights with float loss
+                tickets[index] = 255 / weight * (weight - int_weight)
+
+            while precision_error > 0:
+                ticket = max(tickets)
+                if ticket > 0:
+                    # Route `1` from precision_error to weights with non-zero ticket value first
+                    idx = tickets.index(ticket)
+                    tickets[idx] = 0
+                else:
+                    # Route remaining precision_error to highest weight to reduce its impact
+                    idx = normalized_weights.index(max(normalized_weights))
+                # Distribute `1` from precision_error
+                normalized_weights[idx] += 1
+                precision_error -= 1
+
+            row_normalized = normalized_weights
+            result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+
+        return result
