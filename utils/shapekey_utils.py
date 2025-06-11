@@ -3,6 +3,7 @@ import bpy
 import time
 import numpy
 import re
+from mathutils import Vector
 
 from .timer_utils import TimerUtils
 from typing import List, Tuple, Dict, Optional
@@ -230,83 +231,19 @@ class ShapeKeyUtils:
         
         return (True, None)
 
+
     @classmethod
-    def extract_shapekey_data_very_very_very_slow(cls,merged_obj,index_vertex_id_dict):
+    def extract_shapekey_data(cls,merged_obj,index_vertex_id_dict):
         '''
-        传入MergedObj，提取出其形态键数据
-
-        TODO 3.31秒？什么玩意这么吃性能呢？
-        我们后面再优化速度，主要是得先把流程走通。
-
+        传入一个Obj，提取出其形态键数据为特定格式
         '''
         TimerUtils.Start("process shapekey data")
+
+        shapekey_cache = cls.get_shapekey_cache(merged_obj,index_vertex_id_dict)
 
         shapekey_offsets = []
         shapekey_vertex_ids = []
         shapekey_vertex_offsets = []
-
-        obj = merged_obj
-        obj_name = obj.name
-        mesh = obj.data
-
-        
-        # 如果这个obj的mesh没有形态键，那就直接跳过不处理
-        mesh_shapekeys = mesh.shape_keys
-        if mesh_shapekeys is None:
-            print("obj: " + obj_name + " 不含有形态键，跳过处理")
-            return None, None, None
-
-        shapekey_index_list = []
-        shapekey_data = {}
-
-        base_data = mesh_shapekeys.key_blocks['Basis'].data
-        for shapekey in mesh_shapekeys.key_blocks:
-            # 截取形态键名称中的形态键shapekey_id，获取不到就跳过
-            shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
-            match = shapekey_pattern.findall(shapekey.name.lower())
-            if len(match) == 0:
-                print("当前形态键名称:" +shapekey.name + " 不是以Deform开头的，进行跳过")
-                continue
-
-            shapekey_index = int(match[0])
-
-            # 因为WWMI的形态键数量只有128个，这里shapekey_id是从0开始的，所以到127结束，所以不能大于等于128
-            if shapekey_index >= 128:
-                break
-
-            if shapekey_index not in shapekey_index_list:
-                shapekey_index_list.append(shapekey_index)
-
-            # 对于这个obj的每个顶点，我们都要尝试从当前shapekey中获取数据，如果获取到了，就放入缓存
-            for vertex_index in range(len(mesh.vertices)):
-                base_vertex_coords = base_data[vertex_index].co
-                shapekey_vertex_coords = shapekey.data[vertex_index].co
-                vertex_offset = shapekey_vertex_coords - base_vertex_coords
-                # 到这里已经有vertex_id、shapekey_id、vertex_offset了，就不用像WWMI一样再从缓存读取了
-                offseted_vertex_index = vertex_index 
-
-                if offseted_vertex_index not in shapekey_data:
-                    shapekey_data[offseted_vertex_index] = {}
-
-                # 如果相差太小，说明无效或者是一样的，说明这个顶点没有ShapeKey，此时向ShapeKeyOffsets中添加空的0
-                if vertex_offset.length < 0.000000001:
-                    # print("相差太小，跳过处理。")
-                    continue
-                
-                # 此时如果能获取到，说明有效，此时可以直接放入准备好的字典
-                shapekey_data[offseted_vertex_index][shapekey_index] = list(vertex_offset)
-
-        # 转换格式问题
-        shapekey_cache = {shapekey_id:{} for shapekey_id in shapekey_index_list}
-
-        # 获取当前obj每个Index对应的VertexId
-        for index_id,vertex_id in index_vertex_id_dict.items():
-            # 这样VertexId加上全局偏移，就能获取到对应位置的形态键数据：
-            vertex_shapekey_data = shapekey_data.get(vertex_id, None)
-            if vertex_shapekey_data is not None:
-                for shapekey_index,vertex_offsets in vertex_shapekey_data.items():
-                    # 然后这里IndexId加上全局IndexId偏移，就得到了obj整体的IndexId，存到对应的ShapeKeyIndex上面
-                    shapekey_cache[shapekey_index][index_id] = vertex_offsets
 
         # 从0到128去获取ShapeKey的Index，有就直接加到
         shapekey_verts_count = 0
@@ -325,3 +262,81 @@ class ShapeKeyUtils:
 
         TimerUtils.End("process shapekey data") 
         return shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets
+    
+
+
+    @classmethod
+    def get_shapekey_cache(cls, merged_obj, index_vertex_id_dict):
+        '''
+        Numpy优化版本，快很多
+        '''
+        TimerUtils.Start("shapekey_cache")
+        obj = merged_obj
+        mesh = obj.data
+        mesh_shapekeys = mesh.shape_keys
+        
+        if mesh_shapekeys is None:
+            print(f"obj: {obj.name} 不含有形态键，跳过处理")
+            TimerUtils.End("shapekey_cache")
+            return None, None, None
+
+        # 构建顶点索引到全局index_id的反向映射
+        vertex_to_indices = {}
+        for index_id, vertex_id in index_vertex_id_dict.items():
+            if vertex_id not in vertex_to_indices:
+                vertex_to_indices[vertex_id] = []
+            vertex_to_indices[vertex_id].append(index_id)
+
+        # 获取基础坐标
+        base_data = mesh_shapekeys.key_blocks['Basis'].data
+        base_coords = numpy.empty((len(mesh.vertices), 3), dtype=numpy.float32)
+        base_data.foreach_get('co', base_coords.ravel())
+
+        shapekey_cache = {}
+        shapekey_pattern = re.compile(r'.*(?:deform|custom)[_ -]*(\d+).*')
+
+        # 处理每个形态键
+        for shapekey in mesh_shapekeys.key_blocks:
+            # 跳过基础形态键
+            if shapekey.name == 'Basis':
+                continue
+                
+            # 提取形态键ID
+            match = shapekey_pattern.findall(shapekey.name.lower())
+            if not match:
+                print(f"当前形态键名称:{shapekey.name} 不符合命名规范，跳过")
+                continue
+                
+            shapekey_idx = int(match[0])
+            if shapekey_idx >= 128:
+                break  # 按原逻辑遇到>=128的索引直接停止处理
+
+            # 获取形态键坐标数据
+            sk_coords = numpy.empty((len(mesh.vertices), 3), dtype=numpy.float32)
+            shapekey.data.foreach_get('co', sk_coords.ravel())
+            
+            # 计算偏移量 (向量化操作)
+            offsets = sk_coords - base_coords
+            
+            # 计算向量长度并过滤小偏移
+            lengths = numpy.linalg.norm(offsets, axis=1)
+            valid_mask = lengths >= 1e-9
+            valid_vertex_ids = numpy.where(valid_mask)[0]
+            
+            if not valid_vertex_ids.size:
+                continue
+                
+            # 按形态键初始化缓存
+            if shapekey_idx not in shapekey_cache:
+                shapekey_cache[shapekey_idx] = {}
+                
+            # 处理有效顶点
+            for v_idx in valid_vertex_ids:
+                offset_list = offsets[v_idx].tolist()
+                # 获取关联的全局index_id
+                if v_idx in vertex_to_indices:
+                    for index_id in vertex_to_indices[v_idx]:
+                        shapekey_cache[shapekey_idx][index_id] = offset_list
+
+        TimerUtils.End("shapekey_cache")
+        return shapekey_cache

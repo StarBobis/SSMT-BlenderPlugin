@@ -156,7 +156,7 @@ class DrawIBModelWWMI:
         if merged_obj.data.shape_keys is None or len(getattr(merged_obj.data.shape_keys, 'key_blocks', [])) == 0:
             print(f'No shapekeys found to process!')
         else:
-            shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets_np = ShapeKeyUtils.extract_shapekey_data_very_very_very_slow(merged_obj=merged_obj,index_vertex_id_dict=index_vertex_id_dict)
+            shapekey_offsets,shapekey_vertex_ids,shapekey_vertex_offsets_np = ShapeKeyUtils.extract_shapekey_data(merged_obj=merged_obj,index_vertex_id_dict=index_vertex_id_dict)
 
             self.shapekey_offsets = shapekey_offsets
             self.shapekey_vertex_ids = shapekey_vertex_ids
