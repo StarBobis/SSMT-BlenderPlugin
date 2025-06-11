@@ -50,7 +50,6 @@ class FMTFile:
         self.rotate_angle_x:float = 0
         self.rotate_angle_y:float = 0
         self.rotate_angle_z:float = 0
-        self.flip_normal:bool = False
         self.flip_winding:bool = False
         self.flip_mirror:bool = False
         self.flip_face_orientation:bool = False
@@ -87,9 +86,6 @@ class FMTFile:
                 self.rotate_angle_y = float(value)
             elif key == "rotate_angle_z":
                 self.rotate_angle_z = float(value)
-
-            elif key == "flip_normal":
-                self.flip_normal = value.lower() == "true"
             
             elif key == "flip_winding":
                 self.flip_winding = value.lower() == "true"

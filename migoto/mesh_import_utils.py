@@ -94,10 +94,6 @@ class MeshImportUtils:
                 else:
                     normals = [(x[0], x[1], x[2]) for x in data]
                 
-                # 一般只有WWMI的会触发这个
-                if mbf.fmt_file.flip_normal:
-                    # 如果fmt文件设置了flip_normal，则需要翻转法线
-                    normals = [(-x[0], -x[1], -x[2]) for x in normals]
 
             elif element.SemanticName == "TANGENT":
                 pass
@@ -144,6 +140,8 @@ class MeshImportUtils:
         # XXX 这个方法还必须得在mesh.validate和mesh.update之后调用 3.6和4.2都可以用这个
         if use_normals:
             # Blender4.2 移除了mesh.create_normal_splits()
+            if bpy.app.version <= (4, 0, 0):
+                mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(normals)
             mesh.calc_tangents()
         
