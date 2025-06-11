@@ -2,12 +2,6 @@ import bpy
 
 from ..config.main_config import GlobalConfig
 
-class ModelCollection:
-    def __init__(self):
-        self.type = ""
-        self.model_collection_name = ""
-        self.obj_name_list:list[str] = []
-
 class CollectionColor:
     '''
     WorkSpaceCollectionColor 【工作空间集合】

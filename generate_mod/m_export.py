@@ -5,17 +5,18 @@ from ..utils.obj_utils import ObjUtils
 from ..migoto.migoto_format import D3D11GameType,ObjModel
 from ..config.main_config import GlobalConfig
 from .buffer_model import BufferModel
-
+from ..utils.timer_utils import TimerUtils
 
 def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):
     '''
     使用Numpy直接从当前选中的obj的mesh中转换数据到目标格式Buffer
     '''
+    TimerUtils.Start("get_buffer_ib_vb_fast")
     buffer_model = BufferModel(d3d11GameType=d3d11GameType)
 
     obj = ObjUtils.get_bpy_context_object()
     buffer_model.check_and_verify_attributes(obj)
-    print("正在处理: " + obj.name)
+    # print("正在计算物体Buffer数据: " + obj.name)
     
     # Nico: 通过evaluated_get获取到的是一个新的mesh，用于导出，不影响原始Mesh
     mesh = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
@@ -41,6 +42,8 @@ def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):
     else:
         # 计算IndexBuffer和CategoryBufferDict
         obj_model = buffer_model.calc_index_vertex_buffer_universal(obj, mesh)
+    
+    TimerUtils.End("get_buffer_ib_vb_fast")
     
     return obj_model.ib, obj_model.category_buffer_dict, obj_model.index_vertex_id_dict
 

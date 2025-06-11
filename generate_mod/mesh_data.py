@@ -71,6 +71,7 @@ class MeshData:
         '''
         升级版，支持多个SemanticIndex的BLENDWEIGHTS和BLENDINDICES
         '''
+        
         mesh_loops = self.mesh.loops
         mesh_loops_length = len(mesh_loops)
         mesh_vertices = self.mesh.vertices

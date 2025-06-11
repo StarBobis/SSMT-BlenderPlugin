@@ -14,7 +14,6 @@ from typing import List, Dict, Union
 from dataclasses import dataclass, field, asdict
 
 from .migoto_utils import Fatal
-from .collection_utils import ModelCollection, CollectionUtils
 from .shapekey_utils import ShapeKeyUtils
 from ..properties.properties_wwmi import Properties_WWMI
 from operator import attrgetter, itemgetter

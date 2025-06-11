@@ -6,7 +6,6 @@ from ..config.main_config import GlobalConfig
 from .m_ini_helper import M_IniHelperV2
 from ..properties.properties_wwmi import Properties_WWMI
 from ..properties.properties_generate_mod import Properties_GenerateMod
-from ..utils.collection_utils import ModelCollection
 from .m_counter import M_Counter
 
 class M_WWMIIniModel:
@@ -14,11 +13,6 @@ class M_WWMIIniModel:
     WWMI专用
     '''
     drawib_drawibmodel_dict:dict[str,DrawIBModelWWMI] = {}
-    shapekeys = {}
-
-    # for texture filter_index function.
-    texture_hash_filter_index_dict = {}
-
 
     @classmethod
     def initialzie(cls):
@@ -26,8 +20,6 @@ class M_WWMIIniModel:
         You have to call this to clean cache data before generate mod.
         '''
         cls.drawib_drawibmodel_dict = {}
-        cls.shapekeys = {}
-        cls.texture_hash_filter_index_dict = {}
 
 
     @classmethod
@@ -496,7 +488,7 @@ class M_WWMIIniModel:
             M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
-            
+
             cls.add_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_commandlist_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)

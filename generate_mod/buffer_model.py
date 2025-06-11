@@ -196,7 +196,7 @@ class BufferModel:
                 if GlobalConfig.gamename == "WWMI":
                     # 翻转法线
                     self.element_vertex_ndarray[d3d11_element_name] *= -1
-                    print("WWMI: Set NORMAL to -1")
+                    # print("WWMI: Set NORMAL to -1")
 
 
             elif d3d11_element_name == 'TANGENT':

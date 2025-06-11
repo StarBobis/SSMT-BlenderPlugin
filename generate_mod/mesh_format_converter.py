@@ -187,6 +187,7 @@ class MeshFormatConverter:
     
     @classmethod
     def convert_4x_float32_to_r8g8b8a8_unorm_blendweights(cls, input_array):
+        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
         # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
 
         # TODO 速度很慢，但是numpy自带的方法无法解决权重炸毛的问题，暂时还必须这样
@@ -214,6 +215,7 @@ class MeshFormatConverter:
                 # 对每一行调用 normalize_weights 方法
                 row_normalized = cls.normalize_weights(input_array[i])
                 result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
 
         return result
     

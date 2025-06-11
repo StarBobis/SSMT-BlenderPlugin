@@ -23,7 +23,7 @@ class ComponentModel:
         self.draw_ib = draw_ib
         self.d3d11_game_type = d3d11_game_type
         self.component_name = CollectionUtils.get_clean_collection_name(component_collection.name)
-        print("当前处理Component: " + self.component_name)
+        # print("当前处理Component: " + self.component_name)
 
         self.keyname_mkey_dict:dict[str,M_Key] = {}
         self.ordered_draw_obj_model_list:list[ObjModel] = [] 
@@ -130,7 +130,7 @@ class ComponentModel:
                 m_key = M_Key()
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
                 m_key.key_name = "$swapkey" + str(M_Counter.global_key_index)
-                LOG.info("设置KEYname: " + m_key.key_name)
+                # LOG.info("设置KEYname: " + m_key.key_name)
 
                 m_key.value_list = [0,1]
                 m_key.key_value = ConfigUtils.get_mod_switch_key(M_Counter.global_key_index)
@@ -139,7 +139,7 @@ class ComponentModel:
                 self.keyname_mkey_dict[m_key.key_name] = m_key
 
                 if len(self.keyname_mkey_dict.keys()) > current_add_key_index:
-                    LOG.info("Global Key Index ++")
+                    # LOG.info("Global Key Index ++")
                     M_Counter.global_key_index = M_Counter.global_key_index + 1
 
                 # 创建的key要加入chain_key_list传递下去
@@ -173,7 +173,7 @@ class ComponentModel:
                 current_add_key_index = len(self.keyname_mkey_dict.keys())
           
                 m_key.key_name = "$swapkey" + str(M_Counter.global_key_index)
-                LOG.info("设置KEYname: " + m_key.key_name)
+                # LOG.info("设置KEYname: " + m_key.key_name)
                 m_key.value_list = list(range(len(switch_collection_list)))
                 m_key.key_value = ConfigUtils.get_mod_switch_key(M_Counter.global_key_index)
 
@@ -181,7 +181,7 @@ class ComponentModel:
                 self.keyname_mkey_dict[m_key.key_name] = m_key
 
                 if len(self.keyname_mkey_dict.keys()) > current_add_key_index:
-                    LOG.info("Global Key Index ++")
+                    # LOG.info("Global Key Index ++")
                     M_Counter.global_key_index = M_Counter.global_key_index + 1
 
                 key_tmp_value = 0
@@ -203,9 +203,9 @@ class ComponentModel:
             '''
             if obj.type == 'MESH' and obj.hide_get() == False:
                 
-                print("当前处理物体:" + obj.name + " 生效Key条件:")
-                for chain_key in chain_key_list:
-                    print(chain_key)
+                # print("当前处理物体:" + obj.name + " 生效Key条件:")
+                # for chain_key in chain_key_list:
+                    # print(chain_key)
 
                 obj_model = ObjModel()
                 obj_model.obj_name = obj.name
@@ -213,7 +213,7 @@ class ComponentModel:
 
                 # 这里每遇到一个obj，都把这个obj加入顺序渲染列表
                 self.ordered_draw_obj_model_list.append(obj_model)
-                LOG.newline()
+                # LOG.newline()
 
     
 

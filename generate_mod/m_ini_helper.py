@@ -4,7 +4,6 @@ import shutil
 from .m_ini_builder import *
 from ..utils.json_utils import JsonUtils
 from ..config.main_config import GlobalConfig
-from .m_drawib_model import DrawIBModel,ModelCollection
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from .drawib_model_universal import DrawIBModelUniversal
 from .m_counter import M_Counter
