@@ -146,7 +146,7 @@ class MeshImportUtils:
             # Blender4.2 移除了mesh.create_normal_splits()
             mesh.normals_split_custom_set_from_vertices(normals)
             mesh.calc_tangents()
-
+        
         
         MeshImportUtils.create_bsdf_with_diffuse_linked(obj, mesh_name=mbf.mesh_name,directory=os.path.dirname(mbf.fmt_path))
         MeshImportUtils.set_import_rotate_angle(obj=obj, mbf=mbf)
@@ -214,6 +214,17 @@ class MeshImportUtils:
 
     @classmethod
     def initialize_mesh(cls,mesh, mbf:MigotoBinaryFile):
+        # 翻转索引顺序以改变面朝向
+        # print(mbf.ib_data[0],mbf.ib_data[1],mbf.ib_data[2])
+        if mbf.fmt_file.flip_face_orientation:  # 假设你有一个标志位控制是否翻转
+            flipped_indices = []
+            for i in range(0, len(mbf.ib_data), 3):
+                triangle = mbf.ib_data[i:i+3]
+                flipped_triangle = triangle[::-1]
+                flipped_indices.extend(flipped_triangle)
+            mbf.ib_data = flipped_indices
+        # print(mbf.ib_data[0],mbf.ib_data[1],mbf.ib_data[2])
+
         # 导入IB文件设置为mesh的三角形索引
         mesh.loops.add(mbf.ib_count)
         mesh.polygons.add(mbf.ib_polygon_count)

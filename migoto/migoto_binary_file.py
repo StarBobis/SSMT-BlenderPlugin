@@ -53,6 +53,7 @@ class FMTFile:
         self.flip_normal:bool = False
         self.flip_winding:bool = False
         self.flip_mirror:bool = False
+        self.flip_face_orientation:bool = False
 
         self.elements:list[D3D11Element] = []
 
@@ -95,6 +96,9 @@ class FMTFile:
                 
             elif key == "flip_mirror":
                 self.flip_mirror = value.lower() == "true"
+            
+            elif key == "flip_face_orientation":
+                self.flip_face_orientation = value.lower() == "true"
 
             elif key.startswith("element"):
                 # 处理element块

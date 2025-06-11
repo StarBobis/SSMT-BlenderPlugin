@@ -6,6 +6,7 @@ from ..migoto.migoto_format import D3D11GameType,ObjModel
 from .mesh_data import MeshData
 from .mesh_format_converter import MeshFormatConverter
 from ..utils.migoto_utils import MigotoUtils, Fatal
+from ..config.main_config import GlobalConfig
 
 from ..config.main_config import GlobalConfig, GameCategory
 
@@ -166,8 +167,8 @@ class BufferModel:
                     result[2::4] = normals[2::3]
                     result = result.reshape(-1, 4)
                     
-                    if GlobalConfig.gamename == "YYSLS":
-                        result *= -1
+                    # if GlobalConfig.gamename == "YYSLS":
+                    #     result *= -1
 
                     # 归一化 (此处感谢 球球 的代码开发)
                     def DeConvert(nor):
@@ -191,8 +192,9 @@ class BufferModel:
                 # 如果当前游戏是WWMI，则进行翻转normal
                 if GlobalConfig.gamename == "WWMI":
                     # 翻转法线
-                    self.element_vertex_ndarray[d3d11_element_name] *= -1
+                    # self.element_vertex_ndarray[d3d11_element_name] *= -1
                     # print("WWMI: Set NORMAL to -1")
+                    pass
 
 
             elif d3d11_element_name == 'TANGENT':
@@ -471,7 +473,19 @@ class BufferModel:
             stride_offset += category_stride
 
         obj_model = ObjModel()
-        obj_model.ib = flattened_ib
+        # obj_model.ib = flattened_ib
+
+        print("导出WWMI Mod时，翻转面朝向")
+        flipped_indices = []
+        print(flattened_ib[0],flattened_ib[1],flattened_ib[2])
+        for i in range(0, len(flattened_ib), 3):
+            triangle = flattened_ib[i:i+3]
+            flipped_triangle = triangle[::-1]
+            flipped_indices.extend(flipped_triangle)
+        print(flipped_indices[0],flipped_indices[1],flipped_indices[2])
+
+        obj_model.ib = flipped_indices
+
         obj_model.category_buffer_dict = category_buffer_dict
         obj_model.index_vertex_id_dict = index_vertex_id_dict
         return obj_model
@@ -520,7 +534,21 @@ class BufferModel:
             stride_offset += category_stride
 
         obj_model = ObjModel()
+
+        
+
         obj_model.ib = flattened_ib
+        if GlobalConfig.gamename == "YYSLS":
+            print("导出WWMI Mod时，翻转面朝向")
+            flipped_indices = []
+            print(flattened_ib[0],flattened_ib[1],flattened_ib[2])
+            for i in range(0, len(flattened_ib), 3):
+                triangle = flattened_ib[i:i+3]
+                flipped_triangle = triangle[::-1]
+                flipped_indices.extend(flipped_triangle)
+            print(flipped_indices[0],flipped_indices[1],flipped_indices[2])
+            obj_model.ib = flipped_indices
+
         obj_model.category_buffer_dict = category_buffer_dict
         obj_model.index_vertex_id_dict = None
         return obj_model
