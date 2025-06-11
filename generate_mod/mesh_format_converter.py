@@ -3,7 +3,7 @@ import numpy
 
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..utils.timer_utils import TimerUtils
-
+from ..utils.log_utils import LOG
 
 class MeshFormatConverter:
     '''
@@ -137,6 +137,8 @@ class MeshFormatConverter:
 
         Credit To @SpectrumQT https://github.com/SpectrumQT
         '''
+
+        
         total = sum(weights)
 
         if total == 0:
@@ -145,10 +147,9 @@ class MeshFormatConverter:
         precision_error = 255
 
         tickets = [0] * len(weights)
-        
         normalized_weights = [0] * len(weights)
 
-        for idx, weight in enumerate(weights):
+        for index, weight in enumerate(weights):
             # Ignore zero weight
             if weight == 0:
                 continue
@@ -156,7 +157,7 @@ class MeshFormatConverter:
             weight = weight / total * 255
             # Ignore weight below minimal precision (1/255)
             if weight < 1:
-                normalized_weights[idx] = 0
+                normalized_weights[index] = 0
                 continue
 
             # Strip float part from the weight
@@ -164,11 +165,11 @@ class MeshFormatConverter:
 
             int_weight = int(weight)
 
-            normalized_weights[idx] = int_weight
+            normalized_weights[index] = int_weight
             # Reduce precision_error by the integer weight value
             precision_error -= int_weight
             # Calculate weight 'significance' index to prioritize lower weights with float loss
-            tickets[idx] = 255 / weight * (weight - int_weight)
+            tickets[index] = 255 / weight * (weight - int_weight)
 
         while precision_error > 0:
             ticket = max(tickets)
@@ -190,13 +191,88 @@ class MeshFormatConverter:
         TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
         # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
 
+        result = numpy.zeros_like(input_array, dtype=numpy.uint8)
+
+        for i in range(input_array.shape[0]):
+            weights = input_array[i]
+
+            # 如果权重含有NaN值，则将该行的所有值设置为0。
+            # 因为权重只要是被刷过，就不会出现NaN值。
+            find_nan = False
+            for w in weights:
+                if math.isnan(w):
+                    row_normalized = [0, 0, 0, 0]
+                    result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+                    find_nan = True
+                    break
+                    # print(weights)
+                    # raise Fatal("NaN found in weights")
+            if find_nan:
+                continue
+            
+            total = sum(weights)
+            if total == 0:
+                row_normalized = [0] * len(weights)
+                result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+                continue
+
+            precision_error = 255
+
+            tickets = [0] * len(weights)
+            normalized_weights = [0] * len(weights)
+
+            for index, weight in enumerate(weights):
+                # Ignore zero weight
+                if weight == 0:
+                    continue
+
+                weight = weight / total * 255
+                # Ignore weight below minimal precision (1/255)
+                if weight < 1:
+                    normalized_weights[index] = 0
+                    continue
+
+                # Strip float part from the weight
+                int_weight = 0
+
+                int_weight = int(weight)
+
+                normalized_weights[index] = int_weight
+                # Reduce precision_error by the integer weight value
+                precision_error -= int_weight
+                # Calculate weight 'significance' index to prioritize lower weights with float loss
+                tickets[index] = 255 / weight * (weight - int_weight)
+
+            while precision_error > 0:
+                ticket = max(tickets)
+                if ticket > 0:
+                    # Route `1` from precision_error to weights with non-zero ticket value first
+                    idx = tickets.index(ticket)
+                    tickets[idx] = 0
+                else:
+                    # Route remaining precision_error to highest weight to reduce its impact
+                    idx = normalized_weights.index(max(normalized_weights))
+                # Distribute `1` from precision_error
+                normalized_weights[idx] += 1
+                precision_error -= 1
+
+            row_normalized = normalized_weights
+            result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
+        TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+
+        return result
+    
+    @classmethod
+    def convert_4x_float32_to_r8g8b8a8_unorm_blendweights_bk(cls, input_array):
+        TimerUtils.Start("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
+        # print(f"Input shape: {input_array.shape}")  # 输出形状 (1896, 4)
+
         # TODO 速度很慢，但是numpy自带的方法无法解决权重炸毛的问题，暂时还必须这样
         # 这里每个顶点都要进行这个操作，总共执行21万次，平均执行4秒，呵呵呵
 
         result = numpy.zeros_like(input_array, dtype=numpy.uint8)
 
         for i in range(input_array.shape[0]):
-
             weights = input_array[i]
 
             # 如果权重含有NaN值，则将该行的所有值设置为0。
@@ -213,21 +289,14 @@ class MeshFormatConverter:
             
             if not find_nan:
                 # 对每一行调用 normalize_weights 方法
+                
                 row_normalized = cls.normalize_weights(input_array[i])
+                
                 result[i] = numpy.array(row_normalized, dtype=numpy.uint8)
         TimerUtils.End("convert_4x_float32_to_r8g8b8a8_unorm_blendweights")
 
         return result
-    
-    # @classmethod
-    # def convert_4x_float32_to_r8g8b8a8_unorm_blendweights(cls, input_array:numpy.ndarray):
-    #     # 核心转换流程
-    #     scaled = input_array * 255.0                  # 缩放至0-255范围
-    #     rounded = numpy.around(scaled)                 # 四舍五入
-    #     clamped = numpy.clip(rounded, 0, 255)          # 约束数值范围
-    #     result = clamped.astype(numpy.uint8)           # 转换为uint8
 
-    #     return result
     
     @classmethod
     def convert_4x_float32_to_r16g16b16a16_unorm(cls, input_array):

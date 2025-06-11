@@ -140,13 +140,8 @@ class BufferModel:
                     if GlobalConfig.get_game_category() == GameCategory.UnrealVS or GlobalConfig.get_game_category() == GameCategory.UnrealCS:
                         bitangent_signs = numpy.empty(mesh_loops_length, dtype=numpy.float32)
                         mesh_loops.foreach_get("bitangent_sign", bitangent_signs)
-                        result[3::4] = bitangent_signs
+                        result[3::4] = bitangent_signs * -1
 
-                        # XXX 3.6和3.2都需要翻转一下，原因未知
-                        if bpy.app.version < (4,0,0):
-                            result[0::4] *= -1
-                            result[1::4] *= -1
-                            result[2::4] *= -1
                         # print("Unreal: Set NORMAL.W to bitangent_sign")
                     
                     result = result.reshape(-1, 4)
@@ -158,6 +153,7 @@ class BufferModel:
                     # 因为法线数据是[-1,1]如果非要导出成UNORM，那一定是进行了归一化到[0,1]
                     
                     result = numpy.ones(mesh_loops_length * 4, dtype=numpy.float32)
+                    
 
                     # 燕云十六声的最后一位w固定为0
                     if GlobalConfig.gamename == "YYSLS":
