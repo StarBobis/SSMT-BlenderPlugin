@@ -14,11 +14,9 @@ from .m_counter import M_Counter
 class ComponentModel:
     '''
     虽然DrawIBModel是每个游戏都不同的，但是ComponentModel这里的代码是可以复用的。
-
-    TODO 后续如果要让全部游戏都用我们这个架构，感觉还有点麻烦，尤其是WWMI的MergeObj问题。
     '''
 
-    def __init__(self,component_collection, d3d11_game_type:D3D11GameType,draw_ib:str):
+    def __init__(self,component_collection, d3d11_game_type:D3D11GameType,draw_ib:str,read_ib_category_data:True):
         '''
         传入一个【Component集合】，然后解析并设置各项属性
         '''
@@ -38,17 +36,14 @@ class ComponentModel:
         self.parse_current_collection(current_collection=component_collection,chain_key_list=[])
 
         '''
-        接下来处理ordered_draw_obj_model_list中的每个obj，得到其condition_str和drawindexed_obj以及其它东西
+        接下来处理ordered_draw_obj_model_list中的每个obj:
         - 读取category_buffer
         - 读取ib
         - 【可选】读取index_vertex_id_dict
         '''
-        '''
-        接下来得到当前Component的ordered_obj_model列表，代表当前Component下面的每个DrawIndexed
-        这里必须是个完整列表，因为不同obj存在复用情况，我们在外面合成ib_buf和category_buf的时候再搞
-        '''
-        self.final_ordered_draw_obj_model_list:list[ObjModel] = [] 
-        self.parse_ib_categorybuf_info()
+        if read_ib_category_data:
+            self.final_ordered_draw_obj_model_list:list[ObjModel] = [] 
+            self.parse_ib_categorybuf_info()
 
     def parse_ib_categorybuf_info(self):
         '''
@@ -105,9 +100,6 @@ class ComponentModel:
         
         self.final_ordered_draw_obj_model_list = final_ordered_draw_obj_model_list
 
-        
-
-        
     
     def parse_current_collection(self,current_collection:bpy.types.Collection,chain_key_list:list[M_Key]):
         
@@ -224,48 +216,7 @@ class ComponentModel:
                 LOG.newline()
 
     
-    def get_drawindexed_str_list(self) -> list[str]:
 
-        # 在输出之前，我们需要根据condition对obj_model进行分组
-        condition_str_obj_model_list_dict:dict[str,list[ObjModel]] = {}
-        for obj_model in self.final_ordered_draw_obj_model_list:
-
-            obj_model_list = condition_str_obj_model_list_dict.get(obj_model.condition.condition_str,[])
-            
-            obj_model_list.append(obj_model)
-            condition_str_obj_model_list_dict[obj_model.condition.condition_str] = obj_model_list
-        
-        print(condition_str_obj_model_list_dict)
-
-        drawindexed_str_list:list[str] = []
-        for condition_str, obj_model_list in condition_str_obj_model_list_dict.items():
-            if condition_str != "":
-                drawindexed_str_list.append("if " + condition_str)
-                for obj_model in obj_model_list:
-                    drawindexed_str_list.append("  ; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-                    drawindexed_str_list.append("  " + obj_model.drawindexed_obj.get_draw_str())
-                drawindexed_str_list.append("endif")
-            else:
-                for obj_model in obj_model_list:
-                    drawindexed_str_list.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-                    drawindexed_str_list.append(obj_model.drawindexed_obj.get_draw_str())
-            drawindexed_str_list.append("")
-
-        return drawindexed_str_list
-        # for obj_model in self.final_ordered_draw_obj_model_list:
-        #     drawindexed_str_list.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
-
-        #     if obj_model.condition.condition_str != "":
-                
-        #         drawindexed_str_list.append("if " + obj_model.condition.condition_str)
-        #         drawindexed_str_list.append(obj_model.drawindexed_obj.get_draw_str())
-        #         drawindexed_str_list.append("endif")
-        #     else:
-        #         drawindexed_str_list.append(obj_model.drawindexed_obj.get_draw_str())
-            
-        #     drawindexed_str_list.append("")
-
-    
 
 
 

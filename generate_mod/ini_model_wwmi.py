@@ -1,7 +1,7 @@
 import shutil
 
 from .m_ini_builder import *
-from .m_drawib_model_wwmi import DrawIBModelWWMI
+from .drawib_model_wwmi import DrawIBModelWWMI
 from ..config.main_config import GlobalConfig
 from .m_ini_helper import M_IniHelper
 from ..properties.properties_wwmi import Properties_WWMI

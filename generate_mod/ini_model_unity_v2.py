@@ -184,7 +184,7 @@ class M_UnityIniModelV2:
 
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
 
-            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            drawindexed_str_list = M_IniHelperV2.get_drawindexed_str_list(component_model.final_ordered_draw_obj_model_list)
             for drawindexed_str in drawindexed_str_list:
                 texture_override_ib_section.append(drawindexed_str)
 
@@ -414,7 +414,7 @@ class M_UnityIniModelV2:
             
             component_model = draw_ib_model.component_name_component_model_dict[component_name]
             
-            drawindexed_str_list = component_model.get_drawindexed_str_list()
+            drawindexed_str_list = M_IniHelperV2.get_drawindexed_str_list(component_model.final_ordered_draw_obj_model_list)
             for drawindexed_str in drawindexed_str_list:
                 texture_override_ib_section.append(drawindexed_str)
  

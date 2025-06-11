@@ -69,17 +69,35 @@ class DrawIBModelWWMI:
 
         # (8) 选中当前融合的obj对象，计算得到ib和category_buffer，以及每个IndexId对应的VertexId
         merged_obj = self.merged_object.object
+
+        # 调用get_buffer_ib_vb_fast前必须选中obj
         bpy.context.view_layer.objects.active = merged_obj
         
+        # 计算得到MergedObj的IndexBuffer和CategoryBuffer
         ib, category_buffer_dict,index_vertex_id_dict = get_buffer_ib_vb_fast(self.d3d11GameType)
+
+        # 写出到文件
+        self.write_out_index_buffer(ib=ib)
+        self.write_out_category_buffer(category_buffer_dict=category_buffer_dict)
+        self.write_out_shapekey_buffer(merged_obj=merged_obj, index_vertex_id_dict=index_vertex_id_dict)
         
-        # (9) 构建每个Category的VertexBuffer，每个Category都生成一个CategoryBuffer文件。
-        self.__categoryname_bytelist_dict = {} 
+        # 删除临时融合的obj对象
+        bpy.data.objects.remove(merged_obj, do_unlink=True)
+    
+    def write_out_index_buffer(self,ib):
+        buf_output_folder = GlobalConfig.path_generatemod_buffer_folder(draw_ib=self.draw_ib)
+
+        packed_data = struct.pack(f'<{len(ib)}I', *ib)
+        with open(buf_output_folder + self.draw_ib + "-Component1.buf", 'wb') as ibf:
+            ibf.write(packed_data) 
+
+    def write_out_category_buffer(self,category_buffer_dict):
+        __categoryname_bytelist_dict = {} 
         for category_name in self.d3d11GameType.OrderedCategoryNameList:
-            if category_name not in self.__categoryname_bytelist_dict:
-                self.__categoryname_bytelist_dict[category_name] =  category_buffer_dict[category_name]
+            if category_name not in __categoryname_bytelist_dict:
+                __categoryname_bytelist_dict[category_name] =  category_buffer_dict[category_name]
             else:
-                existing_array = self.__categoryname_bytelist_dict[category_name]
+                existing_array = __categoryname_bytelist_dict[category_name]
                 buffer_array = category_buffer_dict[category_name]
 
                 # 确保两个数组都是NumPy数组
@@ -90,38 +108,25 @@ class DrawIBModelWWMI:
                 concatenated_array = numpy.concatenate((existing_array, buffer_array))
 
                 # 更新字典中的值
-                self.__categoryname_bytelist_dict[category_name] = concatenated_array
+                __categoryname_bytelist_dict[category_name] = concatenated_array
 
-        # (10) 顺便计算一下步长得到总顶点数
+        # 顺便计算一下步长得到总顶点数
         position_stride = self.d3d11GameType.CategoryStrideDict["Position"]
-        position_bytelength = len(self.__categoryname_bytelist_dict["Position"])
+        position_bytelength = len(__categoryname_bytelist_dict["Position"])
         self.draw_number = int(position_bytelength/position_stride)
 
-
-        
         buf_output_folder = GlobalConfig.path_generatemod_buffer_folder(draw_ib=self.draw_ib)
-        # (10) 写出临时融合的obj对象的shapekey数据到Buffer文件中
-        self.write_out_shapekey_buffer(merged_obj=merged_obj,
-                                       index_vertex_id_dict=index_vertex_id_dict,
-                                       buf_output_folder=buf_output_folder)
-
-        # (11) 导出Buffer文件，Export Index Buffer files, Category Buffer files. 
-        packed_data = struct.pack(f'<{len(ib)}I', *ib)
-        with open(buf_output_folder + self.draw_ib + "-Component1.buf", 'wb') as ibf:
-            ibf.write(packed_data) 
             
-        for category_name, category_buf in self.__categoryname_bytelist_dict.items():
+        for category_name, category_buf in __categoryname_bytelist_dict.items():
             buf_path = buf_output_folder + self.draw_ib + "-" + category_name + ".buf"
              # 将 list 转换为 numpy 数组
             # category_array = numpy.array(category_buf, dtype=numpy.uint8)
             with open(buf_path, 'wb') as ibf:
                 category_buf.tofile(ibf)
-        
-        # (12) 删除临时融合的obj对象
-        bpy.data.objects.remove(merged_obj, do_unlink=True)
 
+    def write_out_shapekey_buffer(self,merged_obj,index_vertex_id_dict):
+        buf_output_folder = GlobalConfig.path_generatemod_buffer_folder(draw_ib=self.draw_ib)
 
-    def write_out_shapekey_buffer(self,merged_obj,index_vertex_id_dict,buf_output_folder):
         self.shapekey_offsets = []
         self.shapekey_vertex_ids = []
         self.shapekey_vertex_offsets = []

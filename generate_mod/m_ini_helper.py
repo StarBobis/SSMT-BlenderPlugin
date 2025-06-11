@@ -8,8 +8,37 @@ from .m_drawib_model import DrawIBModel,ModelCollection
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from .drawib_model_universal import DrawIBModelUniversal
 from .m_counter import M_Counter
+from ..migoto.migoto_format import ObjModel
 
 class M_IniHelperV2:
+    @classmethod
+    def get_drawindexed_str_list(cls,ordered_draw_obj_model_list) -> list[str]:
+        # 在输出之前，我们需要根据condition对obj_model进行分组
+        condition_str_obj_model_list_dict:dict[str,list[ObjModel]] = {}
+        for obj_model in ordered_draw_obj_model_list:
+
+            obj_model_list = condition_str_obj_model_list_dict.get(obj_model.condition.condition_str,[])
+            
+            obj_model_list.append(obj_model)
+            condition_str_obj_model_list_dict[obj_model.condition.condition_str] = obj_model_list
+        
+        print(condition_str_obj_model_list_dict)
+
+        drawindexed_str_list:list[str] = []
+        for condition_str, obj_model_list in condition_str_obj_model_list_dict.items():
+            if condition_str != "":
+                drawindexed_str_list.append("if " + condition_str)
+                for obj_model in obj_model_list:
+                    drawindexed_str_list.append("  ; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
+                    drawindexed_str_list.append("  " + obj_model.drawindexed_obj.get_draw_str())
+                drawindexed_str_list.append("endif")
+            else:
+                for obj_model in obj_model_list:
+                    drawindexed_str_list.append("; [mesh:" + obj_model.obj_name + "] [vertex_count:" + str(obj_model.drawindexed_obj.UniqueVertexCount) + "]" )
+                    drawindexed_str_list.append(obj_model.drawindexed_obj.get_draw_str())
+            drawindexed_str_list.append("")
+
+        return drawindexed_str_list
 
     @classmethod
     def generate_hash_style_texture_ini(cls,ini_builder:M_IniBuilder,drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal]):

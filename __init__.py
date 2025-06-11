@@ -19,7 +19,7 @@ bl_info = {
     "name": "SSMT",
     "description": "SSMT",
     "blender": (3, 6, 0),
-    "version": (1, 5, 3),
+    "version": (1, 5, 4),
     "location": "View3D",
     "category": "Generic"
 }

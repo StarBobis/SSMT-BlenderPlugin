@@ -3,10 +3,10 @@ import bpy
 from ..utils.command_utils import *
 from ..utils.timer_utils import TimerUtils
 from ..utils.collection_utils import CollectionUtils
-from ..generate_mod.m_drawib_model_wwmi import DrawIBModelWWMI
+from ..generate_mod.drawib_model_wwmi import DrawIBModelWWMI
 from ..generate_mod.ini_model_hsr import M_HSRIniModel
 from ..generate_mod.ini_model_wwmi import M_WWMIIniModel
-from ..generate_mod.ini_model_ctx import M_CTX_IniModel
+from ..generate_mod.ini_model_yysls import M_CTX_IniModel
 from ..generate_mod.ini_model_unity_v2 import M_UnityIniModelV2
 from ..generate_mod.ini_model_identity_v import M_IniModel_IdentityV
 
