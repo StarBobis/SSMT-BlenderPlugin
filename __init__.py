@@ -37,7 +37,6 @@ register_classes = (
 
     # 导入3Dmigoto模型功能
     Import3DMigotoRaw,
-    DBMTImportAllFromCurrentWorkSpace,
     SSMTImportAllFromCurrentWorkSpace,
     # 生成Mod功能
     SSMTGenerateModHSR32,

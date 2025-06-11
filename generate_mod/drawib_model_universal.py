@@ -50,15 +50,6 @@ class DrawIBModelUniversal:
         self.TextureResource_Name_FileName_Dict = self.import_config.TextureResource_Name_FileName_Dict
 
         # (2) 解析集合架构，获得每个DrawIB中，每个Component对应的obj列表及其相关属性
-        '''
-        这里我们为了支持嵌套，必须使用全新的Variable变量设计，即所有的调用都必须只有一层
-        意思就是不能在ini里出现嵌套，而是在条件判断里进行增加。
-
-        所以我们获得的就不是ModelCollection了，我们获得的是每个obj的属性，以及这个obj的生效条件
-        重点就是这个生效条件的解析，因为涉及到嵌套的集合架构，所以必须先解析嵌套的集合架构。
-
-        TODO 后面这里搞定后，ModelCollection就可以消失了。
-        '''
         component_collection_list = draw_ib_collection.children
         self.component_model_list:list[ComponentModel] = []
         self.component_name_component_model_dict:dict[str,ComponentModel] = {}
@@ -66,7 +57,6 @@ class DrawIBModelUniversal:
         self.key_name_mkey_dict:dict[str,M_Key] = {}
         for component_collection in component_collection_list:
             component_model = ComponentModel(component_collection=component_collection,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
-            
 
             self.component_model_list.append(component_model)
             self.component_name_component_model_dict[component_model.component_name] = component_model

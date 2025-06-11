@@ -222,10 +222,11 @@ class GenerateModWWMI(bpy.types.Operator):
         TimerUtils.Start("GenerateMod WWMI")
 
         M_WWMIIniModel.initialzie()
+        M_Counter.initialize()
 
         workspace_collection = bpy.context.collection
 
-        result = CollectionUtils.is_valid_workspace_collection(workspace_collection)
+        result = CollectionUtils.is_valid_ssmt_workspace_collection(workspace_collection)
         if result != "":
             self.report({'ERROR'},result)
             return {'FINISHED'}

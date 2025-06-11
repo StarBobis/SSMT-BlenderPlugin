@@ -3,11 +3,11 @@ import shutil
 from .m_ini_builder import *
 from .drawib_model_wwmi import DrawIBModelWWMI
 from ..config.main_config import GlobalConfig
-from .m_ini_helper import M_IniHelper
+from .m_ini_helper import M_IniHelperV2
 from ..properties.properties_wwmi import Properties_WWMI
 from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..utils.collection_utils import ModelCollection
-
+from .m_counter import M_Counter
 
 class M_WWMIIniModel:
     '''
@@ -15,11 +15,6 @@ class M_WWMIIniModel:
     '''
     drawib_drawibmodel_dict:dict[str,DrawIBModelWWMI] = {}
     shapekeys = {}
-
-    global_key_index_constants = 0
-    global_key_index_logic = 0
-    global_generate_mod_number = 0
-
 
     # for texture filter_index function.
     texture_hash_filter_index_dict = {}
@@ -32,11 +27,6 @@ class M_WWMIIniModel:
         '''
         cls.drawib_drawibmodel_dict = {}
         cls.shapekeys = {}
-        
-        cls.global_key_index_constants = 0
-        cls.global_key_index_logic = 0
-        cls.global_generate_mod_number = 0
-
         cls.texture_hash_filter_index_dict = {}
 
 
@@ -263,68 +253,6 @@ class M_WWMIIniModel:
 
         ini_builder.append_section(texture_override_mark_bonedatacb_section)
 
-    @classmethod
-    def get_switchkey_drawindexed_list(cls,model_collection_list:list[ModelCollection],draw_ib_model:DrawIBModelWWMI,vlr_filter_index_indent:str,input_global_key_index_logic:int):
-        '''
-        生成按键开关集合喝按键切换集合的DrawIndexed以及对应注释
-        是Catter集合架构的通用方法
-        返回一个字符串列表和global_key_index_logic
-        字符串列表需要放到对应的ini_section中，global_key_index_logic需要赋值给全局的对应变量
-        '''
-        drawindexed_list = []
-        global_key_index_logic = input_global_key_index_logic
-
-        toggle_type_number = 0
-        toggle_model_collection_list:list[ModelCollection] = []
-        switch_model_collection_list:list[ModelCollection] = []
-
-        for toggle_model_collection in model_collection_list:
-            if toggle_model_collection.type == "toggle":
-                toggle_type_number = toggle_type_number + 1
-                toggle_model_collection_list.append(toggle_model_collection)
-            elif toggle_model_collection.type == "switch":
-                switch_model_collection_list.append(toggle_model_collection)
-
-        # 输出按键切换的DrawIndexed
-        if toggle_type_number >= 2:
-            for toggle_count in range(toggle_type_number):
-                if toggle_count == 0:
-                    drawindexed_list.append(vlr_filter_index_indent + "if $swapkey" + str(global_key_index_logic) + " == " + str(toggle_count))
-                else:
-                    drawindexed_list.append(vlr_filter_index_indent + "else if $swapkey" + str(global_key_index_logic) + " == " + str(toggle_count))
-
-                toggle_model_collection = toggle_model_collection_list[toggle_count]
-                for obj_name in toggle_model_collection.obj_name_list:
-                    m_drawindexed = draw_ib_model.obj_name_drawindexed_dict[obj_name]
-                    drawindexed_list.append(vlr_filter_index_indent + "; " + m_drawindexed.AliasName)
-                    drawindexed_list.append(vlr_filter_index_indent  + m_drawindexed.get_draw_str())
-
-            drawindexed_list.append("endif")
-            drawindexed_list.append("\n")
-
-            global_key_index_logic = global_key_index_logic + 1
-        elif toggle_type_number != 0:
-            for toggle_model_collection in toggle_model_collection_list:
-                for obj_name in toggle_model_collection.obj_name_list:
-                    m_drawindexed = draw_ib_model.obj_name_drawindexed_dict[obj_name]
-                    drawindexed_list.append(vlr_filter_index_indent + "; " + m_drawindexed.AliasName)
-                    drawindexed_list.append(vlr_filter_index_indent + m_drawindexed.get_draw_str())
-                    drawindexed_list.append("\n")
-
-        # 输出按键开关的DrawIndexed
-        for switch_model_collection in switch_model_collection_list:
-            drawindexed_list.append(vlr_filter_index_indent + "if $swapkey" + str(global_key_index_logic) + "  == 1")
-            for obj_name in switch_model_collection.obj_name_list:
-                m_drawindexed = draw_ib_model.obj_name_drawindexed_dict[obj_name]
-                drawindexed_list.append(vlr_filter_index_indent + "; " + m_drawindexed.AliasName)
-                drawindexed_list.append(vlr_filter_index_indent  + m_drawindexed.get_draw_str())
-                drawindexed_list.append("\n")
-            drawindexed_list.append(vlr_filter_index_indent + "endif")
-            drawindexed_list.append("\n")
-            global_key_index_logic = global_key_index_logic + 1
-        
-        return drawindexed_list, global_key_index_logic
-
 
     @classmethod
     def add_texture_override_component(cls,ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelWWMI):
@@ -357,34 +285,32 @@ class M_WWMIIniModel:
                 texture_override_component.append("    " + "handling = skip")
 
                 # 必须先判定这里是否有DrawIndexed才能去进行绘制以及调用CommandList
-                model_collection_list = draw_ib_model.componentname_modelcollection_list_dict[component_name]
-                drawindexed_list, added_global_key_index_logic = cls.get_switchkey_drawindexed_list(model_collection_list=model_collection_list, draw_ib_model=draw_ib_model,vlr_filter_index_indent="",input_global_key_index_logic=cls.global_key_index_logic)
-                
-                if len(drawindexed_list) != 0:
+                component_model = draw_ib_model.component_name_component_model_dict[component_name]
+                drawindexed_str_list = M_IniHelperV2.get_drawindexed_str_list(component_model.final_ordered_draw_obj_model_list)
+
+                if len(drawindexed_str_list) != 0:
                     texture_override_component.append("    " + "run = CommandListTriggerResourceOverrides")
                     texture_override_component.append("    " + "run = CommandListOverrideSharedResources")
                     texture_override_component.append("    " + "; Draw Component " + component_count_str)
-
-                    for drawindexed_str in drawindexed_list:
-                        texture_override_component.append("    " + drawindexed_str)
-                    cls.global_key_index_logic = added_global_key_index_logic
+                    
+                    for drawindexed_str in drawindexed_str_list:
+                        texture_override_component.append(drawindexed_str)
 
                     texture_override_component.append("    " + "run = CommandListCleanupSharedResources")
                 texture_override_component.append("  endif")
             else:
 
                 # 必须先判定这里是否有DrawIndexed才能去进行绘制以及调用CommandList
-                model_collection_list = draw_ib_model.componentname_modelcollection_list_dict[component_name]
-                drawindexed_list, added_global_key_index_logic = cls.get_switchkey_drawindexed_list(model_collection_list=model_collection_list, draw_ib_model=draw_ib_model,vlr_filter_index_indent="",input_global_key_index_logic=cls.global_key_index_logic)
-                if len(drawindexed_list) != 0:
+                component_model = draw_ib_model.component_name_component_model_dict[component_name]
+                drawindexed_str_list = M_IniHelperV2.get_drawindexed_str_list(component_model.final_ordered_draw_obj_model_list)
+                if len(drawindexed_str_list) != 0:
                     texture_override_component.append("  " + "handling = skip")
                     texture_override_component.append("  " + "run = CommandListTriggerResourceOverrides")
                     texture_override_component.append("  " + "run = CommandListOverrideSharedResources")
                     texture_override_component.append("  " + "; Draw Component " + component_count_str)
 
-                    for drawindexed_str in drawindexed_list:
-                        texture_override_component.append("  " + drawindexed_str)
-                    cls.global_key_index_logic = added_global_key_index_logic
+                    for drawindexed_str in drawindexed_str_list:
+                        texture_override_component.append(drawindexed_str)
 
                     texture_override_component.append("  " + "run = CommandListCleanupSharedResources")
 
@@ -563,13 +489,14 @@ class M_WWMIIniModel:
         '''
         config_ini_builder = M_IniBuilder()
 
-        M_IniHelper.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
+        M_IniHelperV2.generate_hash_style_texture_ini(ini_builder=config_ini_builder,drawib_drawibmodel_dict=cls.drawib_drawibmodel_dict)
 
         # Add namespace 
-        
-
         for draw_ib, draw_ib_model in cls.drawib_drawibmodel_dict.items():
-
+            M_IniHelperV2.add_switchkey_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
+            M_IniHelperV2.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
+            
             cls.add_constants_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_present_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             cls.add_commandlist_section(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
@@ -587,9 +514,9 @@ class M_WWMIIniModel:
             cls.add_resource_buffer(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             
             # 移动槽位贴图
-            M_IniHelper.move_slot_style_textures(draw_ib_model=draw_ib_model)
+            M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
-            cls.global_generate_mod_number = cls.global_generate_mod_number + 1
+            M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
 
             config_ini_builder.save_to_file(GlobalConfig.path_generate_mod_folder() + GlobalConfig.workspacename + "_" + draw_ib + ".ini")
             config_ini_builder.clear()

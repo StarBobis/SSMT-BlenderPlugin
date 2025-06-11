@@ -12,12 +12,14 @@ from ..utils.shapekey_utils import ShapeKeyUtils
 from ..utils.json_utils import *
 from ..utils.timer_utils import *
 from ..utils.migoto_utils import Fatal
-from ..utils.obj_utils import ObjUtils
+from ..utils.obj_utils import *
 
 from ..config.main_config import GlobalConfig
 from ..config.import_config import ImportConfig
 
 from ..utils.obj_utils import ExtractedObject, ExtractedObjectHelper
+
+from .component_model import ComponentModel
 
 import re
 import bpy
@@ -44,15 +46,26 @@ class DrawIBModelWWMI:
 
         # (3) 读取WWMI专属配置
         self.extracted_object:ExtractedObject = ExtractedObjectHelper.read_metadata(GlobalConfig.path_extract_gametype_folder(draw_ib=self.draw_ib,gametype_name=self.d3d11GameType.GameTypeName)  + "Metadata.json")
-
+        
         # (4) 解析集合架构，获得每个DrawIB中，每个Component对应的obj列表及其相关属性
-        self.componentname_modelcollection_list_dict:dict[str,list[ModelCollection]] = CollectionUtils.parse_drawib_collection_architecture(draw_ib_collection=draw_ib_collection)
+        component_collection_list = draw_ib_collection.children
+        self.component_model_list:list[ComponentModel] = []
+        self.component_name_component_model_dict:dict[str,ComponentModel] = {}
+        # 使用全局key索引，确保存在多个Component时声明的key不会重复
+        self.key_name_mkey_dict:dict[str,M_Key] = {}
+        for component_collection in component_collection_list:
+            component_model = ComponentModel(component_collection=component_collection,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib,read_ib_category_data=False)
 
-        # (5) 解析当前有多少个key
-        self.key_number = CollectionUtils.parse_key_number(draw_ib_collection=draw_ib_collection)
+            self.component_model_list.append(component_model)
+            self.component_name_component_model_dict[component_model.component_name] = component_model
+
+            for key_name, mkey in component_model.keyname_mkey_dict.items():
+                self.key_name_mkey_dict[key_name] = mkey
+                print("key_name: " + key_name + "  key:" + str(mkey)) 
+
 
         # (6) 对所有obj进行融合，得到一个最终的用于导出的临时obj
-        self.merged_object = ObjUtils.build_merged_object(
+        self.merged_object = self.build_merged_object(
             extracted_object=self.extracted_object,
             draw_ib_collection=draw_ib_collection
         )
@@ -66,6 +79,14 @@ class DrawIBModelWWMI:
                 draw_indexed_obj.DrawOffsetIndex = str(comp_obj.index_offset)
                 draw_indexed_obj.AliasName = comp_obj.name
                 self.obj_name_drawindexed_dict[comp_obj.name] = draw_indexed_obj
+        
+        for component_model in self.component_model_list:
+            new_ordered_obj_model_list = []
+            for obj_model in component_model.ordered_draw_obj_model_list:
+                obj_model.drawindexed_obj = self.obj_name_drawindexed_dict[obj_model.obj_name]
+                new_ordered_obj_model_list.append(obj_model)
+            component_model.final_ordered_draw_obj_model_list = new_ordered_obj_model_list
+            self.component_name_component_model_dict[component_model.component_name] = component_model
 
         # (8) 选中当前融合的obj对象，计算得到ib和category_buffer，以及每个IndexId对应的VertexId
         merged_obj = self.merged_object.object
@@ -163,3 +184,146 @@ class DrawIBModelWWMI:
                 float_array = numpy.array(self.shapekey_vertex_offsets, dtype=numpy.float32).astype(numpy.float16)
                 with open(buf_output_folder + self.draw_ib + "-" + "ShapeKeyVertexOffset.buf", 'wb') as file:
                     float_array.tofile(file)
+
+    def build_merged_object(self,extracted_object:ExtractedObject,draw_ib_collection):
+        '''
+        extracted_object 用于读取配置
+        draw_ib_collection 用于控制TEMP_Object生成的位置
+        '''
+        # 1.Initialize components
+        components = []
+        for component in extracted_object.components: 
+            components.append(
+                MergedObjectComponent(
+                    objects=[],
+                    index_count=0,
+                )
+            )
+        
+        # 2.import_objects_from_collection
+        # TODO 从这里开始进行修改
+        # 这里是获取所有的obj，需要用咱们的方法来进行集合架构的遍历获取所有的obj
+
+        # Nico: 添加缓存机制，一个obj只处理一次
+        processed_obj_name_list:list[str] = []
+
+        for component_model in self.component_model_list:
+            for obj_model in component_model.ordered_draw_obj_model_list:
+                obj_name = obj_model.obj_name
+                
+                # Nico: 如果已经处理过这个obj，则跳过
+                if obj_name in processed_obj_name_list:
+                    continue
+                processed_obj_name_list.append(obj_name)
+
+                obj = bpy.data.objects.get(obj_name)
+                # 跳过不满足component开头的对象
+
+                # print("ComponentName: " + component_name)
+                component_count = str(component_model.component_name)[10:]
+                # print("ComponentCount: " + component_count)
+
+                component_id = int(component_count) - 1 # 这里减去1是因为我们的Compoennt是从1开始的
+                
+                temp_obj = ObjUtils.copy_object(bpy.context, obj, name=f'TEMP_{obj.name}', collection=draw_ib_collection)
+
+                try:
+                    components[component_id].objects.append(TempObject(
+                        name=obj.name,
+                        object=temp_obj,
+                    ))
+                except Exception as e:
+                    print(f"Error appending object to component: {e}")
+
+        # 3.准备临时对象
+        index_offset = 0
+
+        for component_id, component in enumerate(components):
+
+            component.objects.sort(key=lambda x: x.name)
+
+            for temp_object in component.objects:
+                temp_obj = temp_object.object
+                # Remove muted shape keys
+                if Properties_WWMI.ignore_muted_shape_keys() and temp_obj.data.shape_keys:
+                    muted_shape_keys = []
+                    for shapekey_id in range(len(temp_obj.data.shape_keys.key_blocks)):
+                        shape_key = temp_obj.data.shape_keys.key_blocks[shapekey_id]
+                        if shape_key.mute:
+                            muted_shape_keys.append(shape_key)
+                    for shape_key in muted_shape_keys:
+                        temp_obj.shape_key_remove(shape_key)
+                # Apply all modifiers to temporary object
+                if Properties_WWMI.apply_all_modifiers():
+                    with OpenObject(bpy.context, temp_obj) as obj:
+                        selected_modifiers = [modifier.name for modifier in get_modifiers(obj)]
+                        ShapeKeyUtils.apply_modifiers_for_object_with_shape_keys(bpy.context, selected_modifiers, None)
+                # Triangulate temporary object, this step is crucial as export supports only triangles
+                triangulate_object(bpy.context, temp_obj)
+                # Handle Vertex Groups
+                vertex_groups = get_vertex_groups(temp_obj)
+                # Remove ignored or unexpected vertex groups
+                if Properties_WWMI.import_merged_vgmap():
+                    # Exclude VGs with 'ignore' tag or with higher id VG count from Metadata.ini for current component
+                    total_vg_count = sum([component.vg_count for component in extracted_object.components])
+                    ignore_list = [vg for vg in vertex_groups if 'ignore' in vg.name.lower() or vg.index >= total_vg_count]
+                else:
+                    # Exclude VGs with 'ignore' tag or with higher id VG count from Metadata.ini for current component
+                    extracted_component = extracted_object.components[component_id]
+                    total_vg_count = len(extracted_component.vg_map)
+                    ignore_list = [vg for vg in vertex_groups if 'ignore' in vg.name.lower() or vg.index >= total_vg_count]
+                remove_vertex_groups(temp_obj, ignore_list)
+                # Rename VGs to their indicies to merge ones of different components together
+                for vg in get_vertex_groups(temp_obj):
+                    vg.name = str(vg.index)
+                # Calculate vertex count of temporary object
+                temp_object.vertex_count = len(temp_obj.data.vertices)
+                # Calculate index count of temporary object, IB stores 3 indices per triangle
+                temp_object.index_count = len(temp_obj.data.polygons) * 3
+                # Set index offset of temporary object to global index_offset
+                temp_object.index_offset = index_offset
+                # Update global index_offset
+                index_offset += temp_object.index_count
+                # Update vertex and index count of custom component
+                component.vertex_count += temp_object.vertex_count
+                component.index_count += temp_object.index_count
+
+        # build_merged_object:
+
+        merged_object = []
+        vertex_count, index_count = 0, 0
+        for component in components:
+            for temp_object in component.objects:
+                merged_object.append(temp_object.object)
+            vertex_count += component.vertex_count
+            index_count += component.index_count
+            
+        join_objects(bpy.context, merged_object)
+
+        obj = merged_object[0]
+
+        rename_object(obj, 'TEMP_EXPORT_OBJECT')
+
+        deselect_all_objects()
+        select_object(obj)
+        set_active_object(bpy.context, obj)
+
+        mesh = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+
+        merged_object = MergedObject(
+            object=obj,
+            mesh=mesh,
+            components=components,
+            vertex_count=len(obj.data.vertices),
+            index_count=len(obj.data.polygons) * 3,
+            vg_count=len(get_vertex_groups(obj)),
+            shapekeys=MergedObjectShapeKeys(),
+        )
+
+        if vertex_count != merged_object.vertex_count:
+            raise ValueError('vertex_count mismatch between merged object and its components')
+
+        if index_count != merged_object.index_count:
+            raise ValueError('index_count mismatch between merged object and its components')
+        
+        return merged_object

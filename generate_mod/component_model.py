@@ -16,7 +16,7 @@ class ComponentModel:
     虽然DrawIBModel是每个游戏都不同的，但是ComponentModel这里的代码是可以复用的。
     '''
 
-    def __init__(self,component_collection, d3d11_game_type:D3D11GameType,draw_ib:str,read_ib_category_data:True):
+    def __init__(self,component_collection, d3d11_game_type:D3D11GameType,draw_ib:str,read_ib_category_data=True):
         '''
         传入一个【Component集合】，然后解析并设置各项属性
         '''
@@ -26,7 +26,7 @@ class ComponentModel:
         print("当前处理Component: " + self.component_name)
 
         self.keyname_mkey_dict:dict[str,M_Key] = {}
-        self.__ordered_draw_obj_model_list:list[ObjModel] = [] 
+        self.ordered_draw_obj_model_list:list[ObjModel] = [] 
         '''
         处理集合，递归处理
         自我递归调用解析集合架构，得到一个ordered_draw_obj_model_list列表
@@ -56,7 +56,7 @@ class ComponentModel:
 
         obj_name_obj_model_cache_dict:dict[str,ObjModel] = {}
 
-        for obj_model in self.__ordered_draw_obj_model_list:
+        for obj_model in self.ordered_draw_obj_model_list:
             obj_name = obj_model.obj_name
 
             obj = bpy.data.objects[obj_name]
@@ -90,7 +90,7 @@ class ComponentModel:
         
         final_ordered_draw_obj_model_list:list[ObjModel] = [] 
         
-        for obj_model in self.__ordered_draw_obj_model_list:
+        for obj_model in self.ordered_draw_obj_model_list:
             obj_name = obj_model.obj_name
 
             obj_model.ib = __obj_name_ib_dict[obj_name]
@@ -212,7 +212,7 @@ class ComponentModel:
                 obj_model.condition =M_Condition(work_key_list=copy.deepcopy(chain_key_list)) 
 
                 # 这里每遇到一个obj，都把这个obj加入顺序渲染列表
-                self.__ordered_draw_obj_model_list.append(obj_model)
+                self.ordered_draw_obj_model_list.append(obj_model)
                 LOG.newline()
 
     
