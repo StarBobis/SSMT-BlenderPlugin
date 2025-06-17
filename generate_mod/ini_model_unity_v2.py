@@ -386,7 +386,7 @@ class M_UnityIniModelV2:
             # 必须在ib上面替换，否则阴影不正确
             if not d3d11GameType.GPU_PreSkinning:
                 for category_name in d3d11GameType.OrderedCategoryNameList:
-                    category_hash = draw_ib_model.category_hash_dict[category_name]
+                    category_hash = draw_ib_model.import_config.category_hash_dict[category_name]
                     category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
 
                     for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
