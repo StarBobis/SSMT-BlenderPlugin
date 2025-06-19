@@ -61,6 +61,7 @@ class ImportConfig:
         self.vertex_limit_hash = tmp_json_dict["VertexLimitVB"]
         self.work_game_type = tmp_json_dict["WorkGameType"]
         self.vshash_list = tmp_json_dict.get("VSHashList",[])
+        self.original_vertex_count = tmp_json_dict.get("OriginalVertexCount",0)
 
         # 自动贴图依赖于这个字典
         partname_textureresourcereplace_dict:dict[str,str] = tmp_json_dict["PartNameTextureResourceReplaceList"]

@@ -43,11 +43,12 @@ class M_HSRIniModel:
             vertexlimit_section.append("[TextureOverride_" + draw_ib + "_" + draw_ib_model.draw_ib_alias + "_Draw" + "]")
             vertexlimit_section.append("hash = " + draw_ib_model.import_config.vertex_limit_hash)
 
-            vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
-            vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
-            # 这里步长为4，是因为override_byte_stride * override_vertex_count 后要除以 4来得到 uav的num_elements
-            vertexlimit_section.append("uav_byte_stride = 4")
-            vertexlimit_section.new_line()
+            if draw_ib_model.draw_number > draw_ib_model.import_config.original_vertex_count:
+                vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
+                vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+                # 这里步长为4，是因为override_byte_stride * override_vertex_count 后要除以 4来得到 uav的num_elements
+                vertexlimit_section.append("uav_byte_stride = 4")
+                vertexlimit_section.new_line()
 
             config_ini_builder.append_section(vertexlimit_section)
 
