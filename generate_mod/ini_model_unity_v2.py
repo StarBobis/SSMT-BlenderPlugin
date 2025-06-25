@@ -369,6 +369,16 @@ class M_UnityIniModelV2:
             texture_override_ib_section.append("hash = " + draw_ib)
             texture_override_ib_section.append("match_first_index = " + match_first_index)
             texture_override_ib_section.append("checktextureoverride = vb1")
+            
+            # add slot check
+            if not Properties_GenerateMod.forbid_auto_texture_ini():
+                slot_texture_replace_dict:dict[str,TextureReplace] = draw_ib_model.PartName_SlotTextureReplaceDict_Dict.get(part_name,None)
+                # It may not have auto texture
+                if slot_texture_replace_dict is not None:
+                    for slot,texture_replace in slot_texture_replace_dict.items():
+
+                        if texture_replace.style == "Hash":
+                            texture_override_ib_section.append("checktextureoverride = " + slot)
 
             if cls.vlr_filter_index_indent != "":
                 texture_override_ib_section.append("if vb0 == " + str(3000 + M_Counter.generated_mod_number))
@@ -393,6 +403,8 @@ class M_UnityIniModelV2:
                         if original_category_name == draw_category_name:
                             category_original_slot = d3d11GameType.CategoryExtractSlotDict[original_category_name]
                             texture_override_ib_section.append(cls.vlr_filter_index_indent + category_original_slot + " = Resource" + draw_ib + original_category_name)
+
+
 
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)

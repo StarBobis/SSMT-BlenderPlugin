@@ -146,6 +146,16 @@ class M_IniModel_IdentityV:
             # XXX 第五人格特有的check vb0 配合VSCheck使用
             texture_override_ib_section.append("checktextureoverride = vb0")
 
+            # add slot check
+            if not Properties_GenerateMod.forbid_auto_texture_ini():
+                slot_texture_replace_dict:dict[str,TextureReplace] = draw_ib_model.PartName_SlotTextureReplaceDict_Dict.get(part_name,None)
+                # It may not have auto texture
+                if slot_texture_replace_dict is not None:
+                    for slot,texture_replace in slot_texture_replace_dict.items():
+
+                        if texture_replace.style == "Hash":
+                            texture_override_ib_section.append("checktextureoverride = " + slot)
+
             # Add ib replace
             texture_override_ib_section.append(cls.vlr_filter_index_indent + "ib = " + ib_resource_name)
 

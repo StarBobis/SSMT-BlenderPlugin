@@ -225,7 +225,10 @@ class PanelButtons(bpy.types.Panel):
         layout.label(text="当前工作空间: " + GlobalConfig.workspacename)
 
         operator_import_ib_vb = layout.operator("import_mesh.migoto_raw_buffers_mmt",icon='IMPORT')
-        operator_import_ib_vb.filepath = GlobalConfig.path_workspace_folder()
+        
+        # 这里可以设为当前工作空间路径，但是用户一般不会用这个来导入工作空间中的模型，工作空间中的一般都是一键导入。
+        # 而在Mod逆向的时候，通常用这个多次导入逆向出来的模型，所以需要路径记忆功能，所以这里不设置工作空间路径为初始路径了。
+        # operator_import_ib_vb.filepath = GlobalConfig.path_workspace_folder()
 
         layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
 
