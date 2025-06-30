@@ -148,7 +148,7 @@ class M_UnityIniModelV2:
             # 如果不使用GPU-Skinning即为Object类型，此时需要在ibs上面替换对应槽位，在下面替换会导致阴影不正确，必须在上面替换
             if not d3d11GameType.GPU_PreSkinning:
                 for category_name in d3d11GameType.OrderedCategoryNameList:
-                    category_hash = draw_ib_model.category_hash_dict[category_name]
+                    category_hash = draw_ib_model.import_config.category_hash_dict[category_name]
                     category_slot = d3d11GameType.CategoryExtractSlotDict[category_name]
 
                     for original_category_name, draw_category_name in d3d11GameType.CategoryDrawCategoryDict.items():
