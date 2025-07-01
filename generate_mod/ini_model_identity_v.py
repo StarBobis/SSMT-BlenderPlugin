@@ -238,6 +238,7 @@ class M_IniModel_IdentityV:
 
             vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
             vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+            vertexlimit_section.append("uav_byte_stride = 4")
             vertexlimit_section.new_line()
 
             commandlist_ini_builder.append_section(vertexlimit_section)

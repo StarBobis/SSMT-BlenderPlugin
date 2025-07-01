@@ -227,6 +227,8 @@ class M_CTX_IniModel:
 
             vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
             vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+            vertexlimit_section.append("uav_byte_stride = 4")
+
             vertexlimit_section.new_line()
 
             commandlist_ini_builder.append_section(vertexlimit_section)
@@ -302,6 +304,7 @@ class M_CTX_IniModel:
                         texture_override_vb_section.append("[TextureOverride_" + texture_override_vb_namesuffix + "_VertexLimitRaise]")
                         texture_override_vb_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
                         texture_override_vb_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+                        texture_override_vb_section.append("uav_byte_stride = 4")
                     else:
                         texture_override_vb_section.append("[TextureOverride_" + texture_override_vb_namesuffix + "]")
                 else:

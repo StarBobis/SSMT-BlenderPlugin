@@ -204,6 +204,7 @@ class M_UnityIniModelV2:
         格式问题：
         override_byte_stride = 40
         override_vertex_count = 14325
+        uav_byte_stride = 4
         由于这个格式并未添加到CommandList的解析中，所以没法单独写在CommandList里，只能写在TextureOverride下面
         所以我们这个VertexLimitRaise部分直接整体写入CommandList.ini中
 
@@ -227,6 +228,7 @@ class M_UnityIniModelV2:
 
             vertexlimit_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
             vertexlimit_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+            vertexlimit_section.append("uav_byte_stride = 4")
             vertexlimit_section.new_line()
 
             commandlist_ini_builder.append_section(vertexlimit_section)
@@ -302,6 +304,7 @@ class M_UnityIniModelV2:
                         texture_override_vb_section.append("[TextureOverride_" + texture_override_vb_namesuffix + "_VertexLimitRaise]")
                         texture_override_vb_section.append("override_byte_stride = " + str(d3d11GameType.CategoryStrideDict["Position"]))
                         texture_override_vb_section.append("override_vertex_count = " + str(draw_ib_model.draw_number))
+                        texture_override_vb_section.append("uav_byte_stride = 4")
                     else:
                         texture_override_vb_section.append("[TextureOverride_" + texture_override_vb_namesuffix + "]")
                 else:
