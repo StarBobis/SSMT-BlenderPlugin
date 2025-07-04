@@ -23,7 +23,7 @@ bl_info = {
     "name": "SSMT",
     "description": "SSMT",
     "blender": (3, 6, 0),
-    "version": (1, 6, 5),
+    "version": (1, 6, 6),
     "location": "View3D",
     "category": "Generic"
 }
@@ -60,6 +60,7 @@ class UpdaterPanel(bpy.types.Panel):
 
 class HertaUpdatePreference(bpy.types.AddonPreferences):
     # Addon updater preferences.
+    bl_label = "SSMT Updater"
     bl_idname = __package__
 
 
@@ -165,7 +166,6 @@ register_classes = (
     PanelModelSplit,
 
     HertaUpdatePreference,
-
     UpdaterPanel,
     # SSMT预备代码
     # PanelSSMTBasicConfig,
@@ -176,6 +176,7 @@ register_classes = (
 
 
 def register():
+
     for cls in register_classes:
         bpy.utils.register_class(cls)
 
@@ -188,7 +189,6 @@ def register():
     bpy.types.VIEW3D_MT_object_context_menu.append(menu_func_migoto_right_click)
     bpy.types.OUTLINER_MT_collection.append(menu_dbmt_mark_collection_switch)
 
-    addon_updater_ops.register(bl_info)
 
     bpy.types.Scene.submesh_start = bpy.props.IntProperty(
         name="Start Index",
@@ -201,11 +201,16 @@ def register():
         min=3
     )
 
+    addon_updater_ops.register(bl_info)
+
+
 
 
 def unregister():
     for cls in reversed(register_classes):
         bpy.utils.unregister_class(cls)
+
+    addon_updater_ops.unregister()
 
     # 卸载右键菜单
     bpy.types.VIEW3D_MT_object_context_menu.remove(menu_func_migoto_right_click)
