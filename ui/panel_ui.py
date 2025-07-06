@@ -152,7 +152,7 @@ class PanelModelImportConfig(bpy.types.Panel):
         layout.prop(context.scene.properties_import_model,"import_flip_scale_x",text="设置Scale的X分量为-1避免模型镜像")
         layout.prop(context.scene.properties_import_model,"import_flip_scale_y",text="设置Scale的Y分量为-1来改变模型朝向")
     
-        if GlobalConfig.gamename == "WWMI":
+        if GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa":
             layout.prop(context.scene.properties_wwmi,"import_merged_vgmap",text="使用融合统一顶点组")
 
 
@@ -170,7 +170,7 @@ class PanelGenerateModConfig(bpy.types.Panel):
         # 因为UnrealVS显然无法支持这里所有的特性，每个游戏只能支持一部分特性。
 
         # 任何游戏都能贴图标记
-        if GlobalConfig.gamename == "WWMI":
+        if GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa":
             layout.prop(context.scene.properties_generate_mod, "only_use_marked_texture",text="只使用标记过的贴图")
         layout.prop(context.scene.properties_generate_mod, "forbid_auto_texture_ini",text="禁止自动贴图流程")
         
@@ -240,7 +240,7 @@ class PanelButtons(bpy.types.Panel):
             layout.operator("dbmt.generate_mod_yysls",text="生成Mod",icon='EXPORT')
         elif GlobalConfig.gamename == "IdentityV":
             layout.operator("dbmt.generate_mod_identityv",text="生成Mod",icon='EXPORT')
-        elif GlobalConfig.gamename == "WWMI":
+        elif GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa":
             layout.operator("herta.export_mod_wwmi",text="生成Mod",icon='EXPORT')
         else:
             if GlobalConfig.get_game_category() == GameCategory.UnityVS:

@@ -29,7 +29,7 @@ class GlobalConfig:
         elif cls.gamename in ["Game001","AILIMIT"]:
             return GameCategory.UnityCS
         
-        elif cls.gamename in ["Game002","WWMI"]:
+        elif cls.gamename in ["Game002","WWMI","WuWa"]:
             return GameCategory.UnrealVS
         
         elif cls.gamename in ["Game003"]:

@@ -37,7 +37,7 @@ def get_buffer_ib_vb_fast(d3d11GameType:D3D11GameType):
     if GlobalConfig.gamename == "GF2" and "TANGENT" in buffer_model.d3d11GameType.OrderedFullElementList:
         obj_model = buffer_model.calc_index_vertex_buffer_girlsfrontline2(obj, mesh)
 
-    elif GlobalConfig.gamename == "WWMI":
+    elif GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa":
         obj_model = buffer_model.calc_index_vertex_buffer_wwmi(obj, mesh)
     else:
         # 计算IndexBuffer和CategoryBufferDict

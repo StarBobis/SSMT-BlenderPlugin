@@ -118,7 +118,7 @@ class MeshImportUtils:
 
         #  metadata.json, if contains then we can import merged vgmap.
         component = None
-        if Properties_WWMI.import_merged_vgmap() and GlobalConfig.gamename == "WWMI":
+        if Properties_WWMI.import_merged_vgmap() and (GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa"):
             print("尝试读取Metadata.json")
             metadatajsonpath = os.path.join(os.path.dirname(mbf.fmt_path),'Metadata.json')
             if os.path.exists(metadatajsonpath):

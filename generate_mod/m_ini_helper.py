@@ -100,7 +100,7 @@ class M_IniHelperV2:
                         shutil.copy2(original_texture_file_path,target_texture_file_path)
 
             # 现在除了WWMI外都不使用全局Hash贴图风格，而是上面的标记的Hash风格贴图
-            if GlobalConfig.gamename != "WWMI":
+            if GlobalConfig.gamename != "WWMI" and GlobalConfig.gamename != "WuWa":
                 continue
 
             # 如果WWMI只使用标记过的贴图，则跳过RenderTextures的生成

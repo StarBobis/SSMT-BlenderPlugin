@@ -187,14 +187,6 @@ class BufferModel:
                     # 将一维数组 reshape 成 (mesh_loops_length, 3) 形状的二维数组
                     result = result.reshape(-1, 3)
                     self.element_vertex_ndarray[d3d11_element_name] = result
-                
-
-                # 如果当前游戏是WWMI，则进行翻转normal
-                if GlobalConfig.gamename == "WWMI":
-                    # 翻转法线
-                    # self.element_vertex_ndarray[d3d11_element_name] *= -1
-                    # print("WWMI: Set NORMAL to -1")
-                    pass
 
 
             elif d3d11_element_name == 'TANGENT':
