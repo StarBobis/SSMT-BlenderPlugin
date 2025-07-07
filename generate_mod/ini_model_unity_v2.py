@@ -169,7 +169,7 @@ class M_UnityIniModelV2:
                             print(texture_replace.resource_name)
                             if texture_replace.style == "Slot":
                                 if texture_replace.resource_name.endswith("DiffuseMap"):
-                                    texture_override_ib_section.append("Resource\\ZZMI\\DiffuseMap = ref " + texture_replace.resource_name)
+                                    texture_override_ib_section.append("Resource\\ZZMI\\Diffuse = ref " + texture_replace.resource_name)
                                 elif texture_replace.resource_name.endswith("NormalMap"):
                                     texture_override_ib_section.append("Resource\\ZZMI\\NormalMap = ref " + texture_replace.resource_name)
                                 elif texture_replace.resource_name.endswith("LightMap"):
