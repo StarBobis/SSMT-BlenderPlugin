@@ -169,7 +169,7 @@ class M_UnityIniModelV2:
                             print(texture_replace.resource_name)
                             if texture_replace.style == "Slot":
                                 if texture_replace.resource_name.endswith("DiffuseMap"):
-                                    texture_override_ib_section.append("Resource\\ZZMI\\Diffuse = ref " + texture_replace.resource_name)
+                                    texture_override_ib_section.append("Resource\\ZZMI\\DiffuseMap = ref " + texture_replace.resource_name)
                                 elif texture_replace.resource_name.endswith("NormalMap"):
                                     texture_override_ib_section.append("Resource\\ZZMI\\NormalMap = ref " + texture_replace.resource_name)
                                 elif texture_replace.resource_name.endswith("LightMap"):
@@ -187,7 +187,7 @@ class M_UnityIniModelV2:
                                     if Properties_GenerateMod.slot_style_texture_add_filter_index():
                                         texture_override_ib_section.append("endif")
                                 
-                                texture_override_ib_section.append("run = CommandList\\ZZMI\\SetTextures")
+                        texture_override_ib_section.append("run = CommandList\\ZZMI\\SetTextures")
             else:
                 # Add slot style texture slot replace.
                 if not Properties_GenerateMod.forbid_auto_texture_ini():
