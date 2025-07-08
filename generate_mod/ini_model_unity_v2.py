@@ -160,6 +160,9 @@ class M_UnityIniModelV2:
 
             print("Test: ZZZ")
             if GlobalConfig.gamename == "ZZZ":
+
+                texture_override_ib_section.append("run = CommandListSkinTexture")
+
                 # Add slot style texture slot replace.
                 if not Properties_GenerateMod.forbid_auto_texture_ini():
                     slot_texture_replace_dict:dict[str,TextureReplace] = draw_ib_model.PartName_SlotTextureReplaceDict_Dict.get(part_name,None)
