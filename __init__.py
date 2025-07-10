@@ -23,82 +23,12 @@ bl_info = {
     "name": "SSMT",
     "description": "SSMT",
     "blender": (3, 6, 0),
-    "version": (1, 7, 0),
+    "version": (1, 7, 1),
     "location": "View3D",
     "category": "Generic"
 }
 
-class UpdaterPanel(bpy.types.Panel):
-    """Update Panel"""
-    bl_label = "检查版本更新"
-    bl_idname = "Herta_PT_UpdaterPanel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = "objectmode"
-    bl_category = "SSMT"
-    bl_order = 99
-    bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
-
-        # Call to check for update in background.
-        # Note: built-in checks ensure it runs at most once, and will run in
-        # the background thread, not blocking or hanging blender.
-        # Internally also checks to see if auto-check enabled and if the time
-        # interval has passed.
-        # addon_updater_ops.check_for_update_background()
-        col = layout.column()
-        col.scale_y = 0.7
-        # Could also use your own custom drawing based on shared variables.
-        if addon_updater_ops.updater.update_ready:
-            layout.label(text="There's a new update available!", icon="INFO")
-
-        # Call built-in function with draw code/checks.
-        # addon_updater_ops.update_notice_box_ui(self, context)
-        addon_updater_ops.update_settings_ui(self, context)
-
-class HertaUpdatePreference(bpy.types.AddonPreferences):
-    # Addon updater preferences.
-    bl_label = "SSMT Updater"
-    bl_idname = __package__
-
-
-    auto_check_update: bpy.props.BoolProperty(
-        name="Auto-check for Update",
-        description="If enabled, auto-check for updates using an interval",
-        default=True) # type: ignore
-
-    updater_interval_months: bpy.props.IntProperty(
-        name='Months',
-        description="Number of months between checking for updates",
-        default=0,
-        min=0) # type: ignore
-
-    updater_interval_days: bpy.props.IntProperty(
-        name='Days',
-        description="Number of days between checking for updates",
-        default=1,
-        min=0,
-        max=31) # type: ignore
-
-    updater_interval_hours: bpy.props.IntProperty(
-        name='Hours',
-        description="Number of hours between checking for updates",
-        default=0,
-        min=0,
-        max=23) # type: ignore
-
-    updater_interval_minutes: bpy.props.IntProperty(
-        name='Minutes',
-        description="Number of minutes between checking for updates",
-        default=0,
-        min=0,
-        max=59) # type: ignore
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "auto_check_update")
-        addon_updater_ops.update_settings_ui(self, context)
 
 
 register_classes = (
@@ -154,7 +84,6 @@ register_classes = (
     SSMT_LinkObjectsToCollection,
     SSMT_UnlinkObjectsFromCollection,
     # UI
-    MigotoAttributePanel,
     PanelModelImportConfig,
     PanelGenerateModConfig,
     PanelButtons,
@@ -201,7 +130,18 @@ def register():
         min=3
     )
 
+
     addon_updater_ops.register(bl_info)
+    
+    # 3Dmigoto属性面板 注册
+    global migoto_draw_handler
+    # 注册 draw_handler，不传递 context 参数
+    migoto_draw_handler = SpaceView3D.draw_handler_add(
+        draw_migoto_overlay,
+        (),
+        'WINDOW',
+        'POST_PIXEL'
+    )
 
 
 
@@ -218,6 +158,12 @@ def unregister():
 
     del bpy.types.Scene.submesh_start
     del bpy.types.Scene.submesh_count
+    
+    # 3Dmigoto属性面板 注册
+    global migoto_draw_handler
+    if migoto_draw_handler:
+        SpaceView3D.draw_handler_remove(migoto_draw_handler, 'WINDOW')
+        migoto_draw_handler = None
 
 
 if __name__ == "__main__":

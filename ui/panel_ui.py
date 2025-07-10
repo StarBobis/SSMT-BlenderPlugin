@@ -1,5 +1,9 @@
 import bpy
+import blf
+
 import os
+
+from bpy.types import SpaceView3D
 
 from ..utils.migoto_utils import *
 from ..config.main_config import * 
@@ -12,6 +16,7 @@ from ..migoto.migoto_binary_file import MigotoBinaryFile
 
 from bpy_extras.io_utils import ImportHelper # 用于解决 AttributeError: 'IMPORT_MESH_OT_migoto_raw_buffers_mmt' object has no attribute 'filepath'
 
+from .. import addon_updater_ops
 
 # 用于选择DBMT所在文件夹，主要是这里能自定义逻辑从而实现保存DBMT路径，这样下次打开就还能读取到。
 class OBJECT_OT_select_dbmt_folder(bpy.types.Operator):
@@ -97,45 +102,51 @@ class Import3DMigotoRaw(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-    
-class MigotoAttributePanel(bpy.types.Panel):
-    bl_label = "特殊属性面板"
-    bl_idname = "VIEW3D_PT_CATTER_MigotoAttribute_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'SSMT'
-    bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
-        # 检查是否有选中的对象
-        if len(context.selected_objects) > 0:
-            # 获取第一个选中的对象
-            selected_obj = context.selected_objects[0]
-            
-            # 显示对象名称
-            # layout.row().label(text=f"obj name: {selected_obj.name}")
-            # layout.row().label(text=f"mesh name: {selected_obj.data.name}")
-            gametypename = selected_obj.get("3DMigoto:GameTypeName",None)
-            if gametypename is not None:
-                row = layout.row()
-                row.label(text=f"GameType: " + str(gametypename))
+# 3Dmigoto属性绘制
+def draw_migoto_overlay():
+    """在 3D 视图左下角绘制自定义信息"""
+    context = bpy.context  # 直接使用 bpy.context 获取完整上下文
+    if len(context.selected_objects) == 0:
+        return
 
-            # 示例：显示位置信息
-            recalculate_tangent = selected_obj.get("3DMigoto:RecalculateTANGENT",None)
-            if recalculate_tangent is not None:
-                row = layout.row()
-                row.label(text=f"Recalculate TANGENT:" + str(recalculate_tangent))
+    obj = context.selected_objects[0]
+    region = context.region
+    font_id = 0  # 默认字体
 
-            recalculate_color = selected_obj.get("3DMigoto:RecalculateCOLOR",None)
-            if recalculate_color is not None:
-                row = layout.row()
-                row.label(text=f"Recalculate COLOR:" + str(recalculate_color))
+    # 设置绘制位置（左上角，稍微偏移避免遮挡默认信息）
+    x = 70
+    y = 60  # 从顶部往下偏移
 
-        else:
-            # 如果没有选中的对象，则显示提示信息
-            row = layout.row()
-            row.label(text="当前未选中任何物体")
+    # 获取自定义属性
+    gametypename = obj.get("3DMigoto:GameTypeName", None)
+    recalculate_tangent = obj.get("3DMigoto:RecalculateTANGENT", None)
+    recalculate_color = obj.get("3DMigoto:RecalculateCOLOR", None)
+
+    # 设置字体样式（可选）
+    blf.size(font_id, 12)  # 12pt 大小
+    blf.color(font_id, 1, 1, 1, 1)  # 白色
+
+    # 绘制文本
+    if gametypename:
+        y += 20
+        blf.position(font_id, x, y, 0)
+        blf.draw(font_id, f"GameType: {gametypename}")
+
+        y += 20
+        blf.position(font_id, x, y, 0)
+        blf.draw(font_id, f"Recalculate TANGENT: {recalculate_tangent}")
+        
+
+        y += 20
+        blf.position(font_id, x, y, 0)
+        blf.draw(font_id, f"Recalculate COLOR: {recalculate_color}")
+
+# 存储 draw_handler 引用，方便后续移除
+migoto_draw_handler = None
+
+
+
 
 
 class PanelModelImportConfig(bpy.types.Panel):
@@ -250,3 +261,76 @@ class PanelButtons(bpy.types.Panel):
             else:
                 layout.label(text= "Generate Mod for " + GlobalConfig.gamename + " Not Supported Yet.")
 
+
+class UpdaterPanel(bpy.types.Panel):
+    """Update Panel"""
+    bl_label = "检查版本更新"
+    bl_idname = "Herta_PT_UpdaterPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_context = "objectmode"
+    bl_category = "SSMT"
+    bl_order = 99
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Call to check for update in background.
+        # Note: built-in checks ensure it runs at most once, and will run in
+        # the background thread, not blocking or hanging blender.
+        # Internally also checks to see if auto-check enabled and if the time
+        # interval has passed.
+        # addon_updater_ops.check_for_update_background()
+        col = layout.column()
+        col.scale_y = 0.7
+        # Could also use your own custom drawing based on shared variables.
+        if addon_updater_ops.updater.update_ready:
+            layout.label(text="There's a new update available!", icon="INFO")
+
+        # Call built-in function with draw code/checks.
+        # addon_updater_ops.update_notice_box_ui(self, context)
+        addon_updater_ops.update_settings_ui(self, context)
+
+
+class HertaUpdatePreference(bpy.types.AddonPreferences):
+    # Addon updater preferences.
+    bl_label = "SSMT Updater"
+    bl_idname = __package__
+
+
+    auto_check_update: bpy.props.BoolProperty(
+        name="Auto-check for Update",
+        description="If enabled, auto-check for updates using an interval",
+        default=True) # type: ignore
+
+    updater_interval_months: bpy.props.IntProperty(
+        name='Months',
+        description="Number of months between checking for updates",
+        default=0,
+        min=0) # type: ignore
+
+    updater_interval_days: bpy.props.IntProperty(
+        name='Days',
+        description="Number of days between checking for updates",
+        default=1,
+        min=0,
+        max=31) # type: ignore
+
+    updater_interval_hours: bpy.props.IntProperty(
+        name='Hours',
+        description="Number of hours between checking for updates",
+        default=0,
+        min=0,
+        max=23) # type: ignore
+
+    updater_interval_minutes: bpy.props.IntProperty(
+        name='Minutes',
+        description="Number of minutes between checking for updates",
+        default=0,
+        min=0,
+        max=59) # type: ignore
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "auto_check_update")
+        addon_updater_ops.update_settings_ui(self, context)
