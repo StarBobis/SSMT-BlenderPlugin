@@ -21,7 +21,7 @@ from .. import addon_updater_ops
 # 用于选择DBMT所在文件夹，主要是这里能自定义逻辑从而实现保存DBMT路径，这样下次打开就还能读取到。
 class OBJECT_OT_select_dbmt_folder(bpy.types.Operator):
     bl_idname = "object.select_dbmt_folder"
-    bl_label = "选择DBMT工作文件夹"
+    bl_label = "选择SSMT-Package路径"
 
     directory: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -215,22 +215,23 @@ class PanelButtons(bpy.types.Panel):
         layout = self.layout
 
         # use_sepecified_dbmt
-        layout.prop(context.scene.dbmt_path, "use_specified_dbmt",text="使用指定的DBMT工作路径")
+        layout.prop(context.scene.dbmt_path, "use_specified_dbmt",text="使用指定位置的SSMT-Package")
 
         if Properties_DBMT_Path.use_specified_dbmt():
             # Path button to choose DBMT-GUI.exe location folder.
             row = layout.row()
             row.operator("object.select_dbmt_folder")
 
-            # 获取DBMT.exe的路径
-            dbmt_gui_exe_path = os.path.join(Properties_DBMT_Path.path(), "DBMT.exe")
-            if not os.path.exists(dbmt_gui_exe_path):
-                layout.label(text="Error:Please select DBMT.exe location ", icon='ERROR')
+            ssmt_package_3dmigoto_path = os.path.join(Properties_DBMT_Path.path(), "3Dmigoto-GameMod-Fork")
+            if not os.path.exists(ssmt_package_3dmigoto_path):
+                layout.label(text="Error:Please select SSMT-Package path ", icon='ERROR')
+
         
         GlobalConfig.read_from_main_json()
 
-        layout.label(text="DBMT工作路径: " + GlobalConfig.dbmtlocation)
+        layout.label(text="SSMT-Package路径: " + GlobalConfig.dbmtlocation)
         # print(MainConfig.dbmtlocation)
+
 
         layout.label(text="当前游戏: " + GlobalConfig.gamename)
         layout.label(text="当前工作空间: " + GlobalConfig.workspacename)
@@ -262,75 +263,3 @@ class PanelButtons(bpy.types.Panel):
                 layout.label(text= "Generate Mod for " + GlobalConfig.gamename + " Not Supported Yet.")
 
 
-class UpdaterPanel(bpy.types.Panel):
-    """Update Panel"""
-    bl_label = "检查版本更新"
-    bl_idname = "Herta_PT_UpdaterPanel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = "objectmode"
-    bl_category = "SSMT"
-    bl_order = 99
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        # Call to check for update in background.
-        # Note: built-in checks ensure it runs at most once, and will run in
-        # the background thread, not blocking or hanging blender.
-        # Internally also checks to see if auto-check enabled and if the time
-        # interval has passed.
-        # addon_updater_ops.check_for_update_background()
-        col = layout.column()
-        col.scale_y = 0.7
-        # Could also use your own custom drawing based on shared variables.
-        if addon_updater_ops.updater.update_ready:
-            layout.label(text="There's a new update available!", icon="INFO")
-
-        # Call built-in function with draw code/checks.
-        # addon_updater_ops.update_notice_box_ui(self, context)
-        addon_updater_ops.update_settings_ui(self, context)
-
-
-class HertaUpdatePreference(bpy.types.AddonPreferences):
-    # Addon updater preferences.
-    bl_label = "SSMT Updater"
-    bl_idname = __package__
-
-
-    auto_check_update: bpy.props.BoolProperty(
-        name="Auto-check for Update",
-        description="If enabled, auto-check for updates using an interval",
-        default=True) # type: ignore
-
-    updater_interval_months: bpy.props.IntProperty(
-        name='Months',
-        description="Number of months between checking for updates",
-        default=0,
-        min=0) # type: ignore
-
-    updater_interval_days: bpy.props.IntProperty(
-        name='Days',
-        description="Number of days between checking for updates",
-        default=1,
-        min=0,
-        max=31) # type: ignore
-
-    updater_interval_hours: bpy.props.IntProperty(
-        name='Hours',
-        description="Number of hours between checking for updates",
-        default=0,
-        min=0,
-        max=23) # type: ignore
-
-    updater_interval_minutes: bpy.props.IntProperty(
-        name='Minutes',
-        description="Number of minutes between checking for updates",
-        default=0,
-        min=0,
-        max=59) # type: ignore
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "auto_check_update")
-        addon_updater_ops.update_settings_ui(self, context)
