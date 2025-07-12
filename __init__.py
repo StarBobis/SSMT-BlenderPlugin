@@ -8,6 +8,10 @@ from .ui.collection_rightclick_ui import *
 # 自动更新功能
 from . import addon_updater_ops
 
+# 开发时确保同时自动更新 addon_updater_ops
+import importlib
+importlib.reload(addon_updater_ops)
+
 
 # 全局配置
 from .properties.properties_dbmt_path import Properties_DBMT_Path
@@ -53,7 +57,7 @@ class UpdaterPanel(bpy.types.Panel):
         col.scale_y = 0.7
         # Could also use your own custom drawing based on shared variables.
         if addon_updater_ops.updater.update_ready:
-            layout.label(text="There's a new update available!", icon="INFO")
+            layout.label(text="存在可用更新！", icon="INFO")
 
         # Call built-in function with draw code/checks.
         # addon_updater_ops.update_notice_box_ui(self, context)
@@ -62,44 +66,44 @@ class UpdaterPanel(bpy.types.Panel):
 
 class HertaUpdatePreference(bpy.types.AddonPreferences):
     # Addon updater preferences.
-    bl_label = "SSMT Updater"
+    bl_label = "SSMT 更新器"
     bl_idname = __package__
 
 
     auto_check_update: bpy.props.BoolProperty(
-        name="Auto-check for Update",
-        description="If enabled, auto-check for updates using an interval",
+        name="自动检查更新",
+        description="如启用，按设定的时间间隔自动检查更新",
         default=True) # type: ignore
 
     updater_interval_months: bpy.props.IntProperty(
-        name='Months',
-        description="Number of months between checking for updates",
+        name='月',
+        description="自动检查更新间隔月数",
         default=0,
         min=0) # type: ignore
 
     updater_interval_days: bpy.props.IntProperty(
-        name='Days',
-        description="Number of days between checking for updates",
+        name='天',
+        description="自动检查更新间隔天数",
         default=1,
         min=0,
         max=31) # type: ignore
 
     updater_interval_hours: bpy.props.IntProperty(
-        name='Hours',
-        description="Number of hours between checking for updates",
+        name='小时',
+        description="自动检查更新间隔小时数",
         default=0,
         min=0,
         max=23) # type: ignore
 
     updater_interval_minutes: bpy.props.IntProperty(
-        name='Minutes',
-        description="Number of minutes between checking for updates",
+        name='分钟',
+        description="自动检查更新间隔分钟数",
         default=0,
         min=0,
         max=59) # type: ignore
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "auto_check_update")
+        layout.prop(self, "自动检查更新")
         addon_updater_ops.update_settings_ui(self, context)
 
 register_classes = (
