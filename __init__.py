@@ -158,6 +158,8 @@ register_classes = (
     PanelModelImportConfig,
     PanelGenerateModConfig,
     PanelButtons,
+    # PanelGenerateModDIY,
+
     # UpdaterPanel,
     PanelCollectionFunction,
     PanelModelProcess,
