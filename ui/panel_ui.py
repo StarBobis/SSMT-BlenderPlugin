@@ -243,7 +243,7 @@ class PanelButtons(bpy.types.Panel):
         # operator_import_ib_vb.filepath = GlobalConfig.path_workspace_folder()
 
         layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
-        layout.operator("ssmt.import_all_from_workspace_v3",icon='IMPORT')
+        # layout.operator("ssmt.import_all_from_workspace_v3",icon='IMPORT')
         
 
         if GlobalConfig.gamename == "HSR" :
@@ -261,44 +261,10 @@ class PanelButtons(bpy.types.Panel):
                 layout.operator("ssmt.generate_mod_unity_vs")
             elif GlobalConfig.get_game_category() == GameCategory.UnityCS:
                 layout.operator("ssmt.generate_mod_unity_cs")
+                # layout.operator("ssmt.generate_mod_unity_cs_v2")
             else:
                 layout.label(text= "Generate Mod for " + GlobalConfig.gamename + " Not Supported Yet.")
 
 
-class PanelGenerateModDIY(bpy.types.Panel):
-    bl_label = "生成Mod（内测功能请勿使用）"
-    bl_idname = "VIEW3D_PT_SSMT_GenerateMod_DIY"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'SSMT'
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        # 根据当前游戏类型判断哪些应该显示哪些不显示。
-        # 因为UnrealVS显然无法支持这里所有的特性，每个游戏只能支持一部分特性。
-
-        # 任何游戏都能贴图标记
-        if GlobalConfig.gamename == "WWMI" or GlobalConfig.gamename == "WuWa":
-            layout.prop(context.scene.properties_generate_mod, "only_use_marked_texture",text="只使用标记过的贴图")
-        layout.prop(context.scene.properties_generate_mod, "forbid_auto_texture_ini",text="禁止自动贴图流程")
-        
-        if GlobalConfig.gamename == "HSR":
-            layout.prop(context.scene.properties_generate_mod, "recalculate_tangent",text="向量归一化法线存入TANGENT(全局)")
-        
-        if GlobalConfig.get_game_category() == GameCategory.UnityVS or GlobalConfig.get_game_category() == GameCategory.UnityCS:
-            
-            layout.prop(context.scene.properties_generate_mod, "recalculate_tangent",text="向量归一化法线存入TANGENT(全局)")
-            
-            # 只有崩坏三2.0可能会用到重计算COLOR值
-            if GlobalConfig.gamename == "HI3":
-                layout.prop(context.scene.properties_generate_mod, "recalculate_color",text="算术平均归一化法线存入COLOR(全局)")
-            layout.prop(context.scene.properties_generate_mod, "position_override_filter_draw_type",text="Position替换添加DRAW_TYPE=1判断")
-            layout.prop(context.scene.properties_generate_mod, "vertex_limit_raise_add_filter_index",text="VertexLimitRaise添加filter_index过滤器")
-            layout.prop(context.scene.properties_generate_mod, "slot_style_texture_add_filter_index",text="槽位风格贴图添加filter_index过滤器")
-        elif GlobalConfig.get_game_category() == GameCategory.UnrealVS or GlobalConfig.get_game_category() == GameCategory.UnrealCS:
-            layout.prop(context.scene.properties_wwmi, "ignore_muted_shape_keys")
-            layout.prop(context.scene.properties_wwmi, "apply_all_modifiers")
-    
 
     

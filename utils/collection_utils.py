@@ -176,3 +176,16 @@ class CollectionUtils:
             
         return ""
     
+    @classmethod
+    def is_valid_ssmt_workspace_collection_v2(cls,workspace_collection) -> str:
+        '''
+        按下生成Mod按钮之后，要判断当前选中的集合是否为工作空间集合，并且给出报错信息
+        所以在这里进行校验，如果有问题就返回对应的报错信息，如果没有就返回空字符串
+        在外面接收结果，判断如果不是空字符串就report然后返回，是空字符串才能继续执行。
+        '''
+        clean_workspace_collection_name = CollectionUtils.get_clean_collection_name(workspace_collection.name)
+
+        if clean_workspace_collection_name != GlobalConfig.workspacename:
+            return "当前选中的集合名称不是工作空间集合名称，请检查您是否正确选中了工作空间集合.\n当前选中集合名称: " + clean_workspace_collection_name + "\n正确的工作空间集合名称: " + GlobalConfig.workspacename
+            
+        return ""

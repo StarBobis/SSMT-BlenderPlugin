@@ -124,6 +124,7 @@ register_classes = (
     GenerateModWWMI,
     GenerateModYYSLS,
     SSMTGenerateModUnityCS,
+    SSMTGenerateModUnityCSV2,
     SSMTGenerateModUnityVS,
     GenerateModIdentityV,
 
