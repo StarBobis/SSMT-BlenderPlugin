@@ -179,6 +179,10 @@ class M_UnityIniModelV2:
                                     texture_override_ib_section.append("Resource\\ZZMI\\LightMap = ref " + texture_replace.resource_name)
                                 elif texture_replace.resource_name.endswith("MaterialMap"):
                                     texture_override_ib_section.append("Resource\\ZZMI\\MaterialMap = ref " + texture_replace.resource_name)
+                                elif texture_replace.resource_name.endswith("GlowMap"):
+                                    texture_override_ib_section.append("Resource\\ZZMI\\GlowMap = ref " + texture_replace.resource_name)
+                                elif texture_replace.resource_name.endswith("WengineFx"):
+                                    texture_override_ib_section.append("Resource\\ZZMI\\WengineFx = ref " + texture_replace.resource_name)
                                 else:
                                     texture_filter_index_indent = ""
                                     if Properties_GenerateMod.slot_style_texture_add_filter_index():
