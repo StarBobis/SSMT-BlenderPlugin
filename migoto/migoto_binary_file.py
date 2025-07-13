@@ -153,7 +153,7 @@ class MigotoBinaryFile:
     location_folder_path是存放这些文件的文件夹路径，比如当前工作空间中提取的对应数据类型文件夹
 
     '''
-    def __init__(self, fmt_path:str):
+    def __init__(self, fmt_path:str, mesh_name:str = ""):
         self.fmt_file = FMTFile(fmt_path)
         print("fmt_path: " + fmt_path)
         location_folder_path = os.path.dirname(fmt_path)
@@ -162,11 +162,16 @@ class MigotoBinaryFile:
         if self.fmt_file.prefix == "":
             self.fmt_file.prefix = os.path.basename(fmt_path).split(".fmt")[0]
 
+        if mesh_name == "":
+            self.mesh_name = self.fmt_file.prefix
+        else:
+            self.mesh_name = mesh_name
+        
+
         print("prefix: " + self.fmt_file.prefix)
         self.init_from_prefix(self.fmt_file.prefix, location_folder_path)
 
     def init_from_prefix(self,prefix:str, location_folder_path:str):
-        self.mesh_name = prefix
 
         self.fmt_name = prefix + ".fmt"
         self.vb_name = prefix + ".vb"

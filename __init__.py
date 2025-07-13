@@ -23,7 +23,7 @@ bl_info = {
     "name": "SSMT",
     "description": "SSMT",
     "blender": (3, 6, 0),
-    "version": (1, 7, 1),
+    "version": (1, 7, 2),
     "location": "View3D",
     "category": "Generic"
 }
@@ -116,6 +116,7 @@ register_classes = (
     # 导入3Dmigoto模型功能
     Import3DMigotoRaw,
     SSMTImportAllFromCurrentWorkSpace,
+    SSMTImportAllFromCurrentWorkSpaceV3,
     # 生成Mod功能
     SSMTGenerateModHSR32,
     # DBMTExportUnityVSModToWorkSpaceSeperated,

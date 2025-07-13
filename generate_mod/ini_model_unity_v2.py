@@ -614,10 +614,6 @@ class M_UnityIniModelV2:
 
         config_ini_builder.save_to_file(GlobalConfig.path_generate_mod_folder() + GlobalConfig.workspacename + ".ini")
         
-
-
-
-
     @classmethod
     def generate_unity_vs_config_ini(cls):
         '''
@@ -654,8 +650,6 @@ class M_UnityIniModelV2:
             M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
             M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
-
-
 
         config_ini_builder.save_to_file(GlobalConfig.path_generate_mod_folder() + GlobalConfig.workspacename + ".ini")
 
