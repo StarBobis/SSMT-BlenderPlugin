@@ -224,3 +224,60 @@ class M_IniHelperV2:
                 ini_builder.append_section(key_section)
 
                 key_number = key_number + 1
+
+class M_IniHelperV3:
+
+    @classmethod
+    def add_switchkey_constants_section(cls,ini_builder,key_name_mkey_dict):
+        '''
+        声明SwitchKey的Constants变量
+        '''
+        if len(key_name_mkey_dict.keys()) != 0:
+            constants_section = M_IniSection(M_SectionType.Constants)
+            constants_section.SectionName = "Constants"
+            constants_section.append("global $active" + str(M_Counter.generated_mod_number))
+            for mkey in key_name_mkey_dict.values():
+                key_str = "global persist " + mkey.key_name + " = " + str(mkey.initialize_value)
+                constants_section.append(key_str) 
+
+            ini_builder.append_section(constants_section)
+
+    @classmethod
+    def add_switchkey_present_section(cls,ini_builder,key_name_mkey_dict):
+        '''
+        声明$active激活变量
+        '''
+        if len(key_name_mkey_dict.keys()) != 0:
+            present_section = M_IniSection(M_SectionType.Present)
+            present_section.SectionName = "Present"
+            present_section.append("post $active" + str(M_Counter.generated_mod_number) + " = 0")
+            ini_builder.append_section(present_section)
+    
+    @classmethod
+    def add_switchkey_sections(cls,ini_builder:M_IniBuilder,draw_ib_model:DrawIBModelUniversal,key_name_mkey_dict):
+        '''
+        声明按键切换和按键开关的变量 Key Section
+        '''
+        key_number = 0
+        if len(key_name_mkey_dict.keys()) != 0:
+
+            for mkey in key_name_mkey_dict.values():
+                key_section = M_IniSection(M_SectionType.Key)
+                key_section.append("[KeySwap_" + str(M_Counter.generated_mod_number) + "_" + str(key_number) + "]")
+                if draw_ib_model.d3d11GameType.GPU_PreSkinning:
+                    key_section.append("condition = $active" + str(M_Counter.generated_mod_number) + " == 1")
+                key_section.append("key = " + mkey.key_value)
+                key_section.append("type = cycle")
+
+                key_value_number = len(mkey.value_list)
+                key_cycle_str = ""
+                for i in range(key_value_number):
+                    if i < key_value_number + 1:
+                        key_cycle_str = key_cycle_str + str(i) + ","
+                    else:
+                        key_cycle_str = key_cycle_str + str(i)
+                key_section.append(mkey.key_name + " = " + key_cycle_str)
+                key_section.new_line()
+                ini_builder.append_section(key_section)
+
+                key_number = key_number + 1

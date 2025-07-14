@@ -28,7 +28,7 @@ class M_UnityIniModelV2:
         '''
         You have to call this to clean cache data before generate mod.
         '''
-        cls.drawib_drawibmodel_dict = {}
+        cls.drawib_drawibmodel_dict:dict[str,DrawIBModelUniversal] = {}
         
 
         cls.vlr_filter_index_indent = ""
