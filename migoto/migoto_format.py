@@ -88,7 +88,24 @@ class ObjModel:
         self.obj_name = ""
         self.condition:M_Condition = M_Condition()
         self.drawindexed_obj:M_DrawIndexed = M_DrawIndexed()
+
+class ObjDataModel:
+    def __init__(self,obj_name:str):
+        self.obj_name = obj_name
         
+        # 因为现在的obj都需要遵守命名规则
+        obj_name_split = self.obj_name.split("-")
+        self.draw_ib = obj_name_split[0]
+        self.component_count = int(obj_name_split[1])
+        self.obj_alias_name = obj_name_split[2]
+
+        # 其它属性
+        self.ib = []
+        self.category_buffer_dict = {}
+        self.index_vertex_id_dict = {} # 仅用于WWMI的索引顶点ID字典，key是顶点索引，value是顶点ID，默认可以为None
+        self.condition:M_Condition = M_Condition()
+        self.drawindexed_obj:M_DrawIndexed = M_DrawIndexed()
+
 
 class DrawIBItem:
     def __init__(self):

@@ -13,6 +13,7 @@ from ..generate_mod.ini_model_identity_v import M_IniModel_IdentityV
 from ..generate_mod.drawib_model_universal import DrawIBModelUniversal
 from ..generate_mod.m_counter import M_Counter
 
+from ..games.unity_cs_model import UnityCSModel
 
 class SSMTGenerateModUnityVS(bpy.types.Operator):
     bl_idname = "ssmt.generate_mod_unity_vs"
@@ -262,7 +263,7 @@ class SSMTGenerateModUnityCSV2(bpy.types.Operator):
     def execute(self, context):
         TimerUtils.Start("GenerateMod UnityCS")
 
-        M_UnityIniModelV2.initialzie()
+        # M_UnityIniModelV2.initialzie()
         M_Counter.initialize()
 
         # 先校验当前选中的工作空间是不是一个有效的工作空间集合
@@ -277,25 +278,25 @@ class SSMTGenerateModUnityCSV2(bpy.types.Operator):
         但是因为新的架构里，不同DrawIB之间的模型可以放在一起，共同享受集合架构的按键条件
         所以我们得先统计好当前工作空间集合下所有的以DrawIB为前缀的物体，把它们放到一个DrawIBModel中。
         依次统计完所有的DrawIB的模型列表，然后初始化对应的DrawIBModel，
-        
-        
-        
         '''
-        for draw_ib_collection in workspace_collection.children:
-            # Skip hide collection.
-            if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
-                continue
+        migoto_mod_model = UnityCSModel(workspace_collection=workspace_collection)
 
-            # get drawib
-            draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
-            draw_ib = draw_ib_alias_name.split("_")[0]
 
-            draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
+        # for draw_ib_collection in workspace_collection.children:
+        #     # Skip hide collection.
+        #     if not CollectionUtils.is_collection_visible(draw_ib_collection.name):
+        #         continue
 
-            M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
+        #     # get drawib
+        #     draw_ib_alias_name = CollectionUtils.get_clean_collection_name(draw_ib_collection.name)
+        #     draw_ib = draw_ib_alias_name.split("_")[0]
+
+        #     draw_ib_model = DrawIBModelUniversal(draw_ib_collection=draw_ib_collection)
+
+        #     M_UnityIniModelV2.drawib_drawibmodel_dict[draw_ib] = draw_ib_model
 
         # ModModel填充完毕后，开始输出Mod
-        M_UnityIniModelV2.generate_unity_cs_config_ini()
+        # M_UnityIniModelV2.generate_unity_cs_config_ini()
 
         self.report({'INFO'},"Generate Mod Success!")
         CommandUtils.OpenGeneratedModFolder()

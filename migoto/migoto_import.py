@@ -103,7 +103,6 @@ def ImprotFromWorkSpaceSSMTV3(self, context):
     import_drawib_aliasname_folder_path_dict = ConfigUtils.get_import_drawib_aliasname_folder_path_dict_with_first_match_type()
     print(import_drawib_aliasname_folder_path_dict)
 
-
     workspace_collection = CollectionUtils.create_new_collection(collection_name=GlobalConfig.workspacename,color_tag=CollectionColor.Red)
 
     # 读取时保存每个DrawIB对应的GameType名称到工作空间文件夹下面的Import.json，在导出时使用
