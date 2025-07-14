@@ -606,9 +606,7 @@ class UnityUniversalModel:
         for draw_ib, draw_ib_model in self.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV3.add_switchkey_constants_section(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
-            M_IniHelperV3.add_switchkey_present_section(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
-            M_IniHelperV3.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,key_name_mkey_dict=self.branch_model.keyname_mkey_dict) 
+
 
             if GlobalConfig.gamename != "HSR":
                 self.add_unity_vs_texture_override_vlr_section(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model) 
@@ -624,6 +622,8 @@ class UnityUniversalModel:
             M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
             M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
+
+        M_IniHelperV3.add_branch_key_sections(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
 
         self.add_unity_cs_vertex_shader_check(ini_builder=config_ini_builder)
 
@@ -646,12 +646,11 @@ class UnityUniversalModel:
         if Properties_GenerateMod.slot_style_texture_add_filter_index():
             self.add_texture_filter_index(ini_builder= config_ini_builder)
 
+        
         for draw_ib, draw_ib_model in self.drawib_drawibmodel_dict.items():
 
             # 按键开关与按键切换声明部分
-            M_IniHelperV3.add_switchkey_constants_section(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
-            M_IniHelperV3.add_switchkey_present_section(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
-            M_IniHelperV3.add_switchkey_sections(ini_builder=config_ini_builder,draw_ib_model=draw_ib_model,key_name_mkey_dict=self.branch_model.keyname_mkey_dict) 
+
         
             self.add_unity_vs_texture_override_vlr_section(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
             self.add_unity_vs_texture_override_vb_sections(config_ini_builder=config_ini_builder,commandlist_ini_builder=config_ini_builder,draw_ib_model=draw_ib_model)
@@ -664,5 +663,7 @@ class UnityUniversalModel:
             M_IniHelperV2.move_slot_style_textures(draw_ib_model=draw_ib_model)
 
             M_Counter.generated_mod_number = M_Counter.generated_mod_number + 1
+
+        M_IniHelperV3.add_branch_key_sections(ini_builder=config_ini_builder,key_name_mkey_dict=self.branch_model.keyname_mkey_dict)
 
         config_ini_builder.save_to_file(GlobalConfig.path_generate_mod_folder() + GlobalConfig.workspacename + ".ini")

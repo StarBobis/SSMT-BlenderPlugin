@@ -243,8 +243,7 @@ class PanelButtons(bpy.types.Panel):
         # operator_import_ib_vb.filepath = GlobalConfig.path_workspace_folder()
 
         layout.operator("ssmt.import_all_from_workspace_v2",icon='IMPORT')
-        layout.operator("ssmt.import_all_from_workspace_v3",icon='IMPORT')
-        
+        # layout.operator("ssmt.import_all_from_workspace_v3",icon='IMPORT')
 
         if GlobalConfig.gamename == "HSR" :
             layout.operator("ssmt.generate_mod_hsr_32",text="生成XXMI格式Mod",icon='EXPORT')
@@ -261,7 +260,7 @@ class PanelButtons(bpy.types.Panel):
                 layout.operator("ssmt.generate_mod_unity_vs")
             elif GlobalConfig.get_game_category() == GameCategory.UnityCS:
                 layout.operator("ssmt.generate_mod_unity_cs")
-                layout.operator("ssmt.generate_mod_unity_cs_v2")
+                # layout.operator("ssmt.generate_mod_unity_cs_v2")
             else:
                 layout.label(text= "Generate Mod for " + GlobalConfig.gamename + " Not Supported Yet.")
 
