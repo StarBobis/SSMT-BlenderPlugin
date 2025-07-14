@@ -1,17 +1,21 @@
 import bpy
 import copy
 
+from ..utils.obj_utils import ObjUtils
 from ..utils.log_utils import LOG
 from ..utils.collection_utils import CollectionUtils, CollectionColor
 from ..utils.config_utils import ConfigUtils
 
-from ..migoto.migoto_format import M_Key, ObjDataModel, M_Condition
+from ..migoto.migoto_format import M_Key, ObjDataModel, M_Condition, D3D11GameType
 from ..generate_mod.m_counter import M_Counter
+
+from ..generate_mod.m_export import get_buffer_ib_vb_fast
 
 '''
 分支模型
 
 也就是我们的基于集合嵌套的按键开关与按键切换架构。
+分支按键使用此模型进行全局统计，不再以每个DrawIB为单位。
 '''
 class BranchModel:
 
@@ -141,3 +145,70 @@ class BranchModel:
                 # 这里每遇到一个obj，都把这个obj加入顺序渲染列表
                 self.ordered_draw_obj_data_model_list.append(obj_model)
                 # LOG.newline()
+
+
+    def get_buffered_obj_data_model_list_by_draw_ib_and_game_type(self,draw_ib:str,d3d11_game_type:D3D11GameType):
+        '''
+        (1) 读取obj的category_buffer
+        (2) 读取obj的ib
+        (3) 设置到最终的ordered_draw_obj_model_list
+        '''
+        __obj_name_ib_dict:dict[str,list] = {} 
+        __obj_name_category_buffer_list_dict:dict[str,list] =  {} 
+
+        obj_name_obj_model_cache_dict:dict[str,ObjDataModel] = {}
+
+        for obj_model in self.ordered_draw_obj_data_model_list:
+
+            # 只统计给定DrawIB的数据
+            if obj_model.draw_ib != draw_ib:
+                continue
+
+            obj_name = obj_model.obj_name
+
+            obj = bpy.data.objects[obj_name]
+            
+            obj_model = obj_name_obj_model_cache_dict.get(obj_name,None)
+            if obj_model is not None:
+                LOG.info("Using cached model for " + obj_name)
+                __obj_name_ib_dict[obj.name] = obj_model.ib
+                __obj_name_category_buffer_list_dict[obj.name] = obj_model.category_buffer_dict
+            else:
+                # 选中当前obj对象
+                bpy.context.view_layer.objects.active = obj
+
+                # XXX 我们在导出具体数据之前，先对模型整体的权重进行normalize_all预处理，才能让后续的具体每一个权重的normalize_all更好的工作
+                # 使用这个的前提是当前obj中没有锁定的顶点组，所以这里要先进行判断。
+                if "Blend" in d3d11_game_type.OrderedCategoryNameList:
+                    all_vgs_locked = ObjUtils.is_all_vertex_groups_locked(obj)
+                    if not all_vgs_locked:
+                        ObjUtils.normalize_all(obj)
+
+                ib, category_buffer_dict, index_vertex_id_dict = get_buffer_ib_vb_fast(d3d11_game_type)
+                
+                __obj_name_ib_dict[obj.name] = ib
+                __obj_name_category_buffer_list_dict[obj.name] = category_buffer_dict
+
+                obj_model = ObjDataModel(obj_name=obj.name)
+                obj_model.ib = ib
+                obj_model.category_buffer_dict = category_buffer_dict
+                obj_name_obj_model_cache_dict[obj_name] = obj_model
+        
+        final_ordered_draw_obj_model_list:list[ObjDataModel] = [] 
+
+        print(__obj_name_ib_dict.keys())
+        
+        for obj_model in self.ordered_draw_obj_data_model_list:
+
+            # 只统计给定DrawIB的数据
+            if obj_model.draw_ib != draw_ib:
+                continue
+
+            obj_name = obj_model.obj_name
+
+            obj_model.ib = __obj_name_ib_dict[obj_name]
+            obj_model.category_buffer_dict = __obj_name_category_buffer_list_dict[obj_name]
+
+            final_ordered_draw_obj_model_list.append(copy.deepcopy(obj_model))
+        
+        return final_ordered_draw_obj_model_list

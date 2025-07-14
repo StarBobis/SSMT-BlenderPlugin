@@ -12,21 +12,26 @@ from .draw_ib_model import DrawIBModel
 
 from .branch_model import BranchModel
 
-class UnityCSModel:
-    '''
-    全新Mod架构设计
-    1.Mod不再以DrawIB为单位，整个Mod可包含多个DrawIB。
-    2.分支按键改为全局统计，不再以每个DrawIB为单位。
-    '''
+class UnityUniversalModel:
     def __init__(self,workspace_collection:bpy.types.Collection):
+        # (1) 统计全局分支模型
         self.branch_model = BranchModel(workspace_collection=workspace_collection)
 
-        # (2) 根据obj的命名规则，推导出DrawIB并抽象为DrawIBModel
-        # 这里要在DrawIBModel中改变代码并新增每个Component里的obj的ib和category_buf_dict读取
-        self.draw_ib_draw_ib_model_dict = {}
+        # (2) 抽象每个DrawIB为DrawIBModel
+        self.draw_ib_draw_ib_model_dict:dict[str,DrawIBModel] = {}
         self.parse_draw_ib_draw_ib_model_dict()
 
+        # (3) 生成Mod的ini
+        
+
+
     def parse_draw_ib_draw_ib_model_dict(self):
+        '''
+        根据obj的命名规则，推导出DrawIB并抽象为DrawIBModel
+        如果用户用不到某个DrawIB的话，就可以隐藏掉对应的obj
+        隐藏掉的obj就不会被统计生成DrawIBModel，做到只导入模型，不生成Mod的效果。
+        TODO 这里要在DrawIBModel中改变代码并新增每个Component里的obj的ib和category_buf_dict读取
+        '''
         draw_ib_component_count_list = {}
 
         for obj_data_model in self.branch_model.ordered_draw_obj_data_model_list:
@@ -47,7 +52,7 @@ class UnityCSModel:
         print(draw_ib_component_count_list)
 
         for draw_ib in draw_ib_component_count_list.keys():
-            draw_ib_model = DrawIBModel(draw_ib=draw_ib)
+            draw_ib_model = DrawIBModel(draw_ib=draw_ib,branch_model=self.branch_model)
             self.draw_ib_draw_ib_model_dict[draw_ib] = draw_ib_model
             
             

@@ -7,6 +7,7 @@ from ..generate_mod.m_export import get_buffer_ib_vb_fast
 
 from ..migoto.migoto_format import *
 
+from ..utils.config_utils import ConfigUtils
 from ..utils.collection_utils import *
 from ..config.main_config import *
 from ..utils.json_utils import *
@@ -17,9 +18,16 @@ from ..utils.obj_utils import ObjUtils
 from ..utils.obj_utils import ExtractedObject, ExtractedObjectHelper
 from ..migoto.migoto_format import M_DrawIndexed, TextureReplace,ObjModel
 from ..config.import_config import ImportConfig
-from ..generate_mod.component_model import ComponentModel
 
 from ..generate_mod.m_counter import M_Counter
+from .branch_model import BranchModel
+
+class ComponentModel:
+
+    def __init__(self):
+        self.component_name = ""
+        self.final_ordered_draw_obj_model_list = []
+        pass
 
 
 class DrawIBModel:
@@ -32,38 +40,43 @@ class DrawIBModel:
 
 
     # 通过default_factory让每个类的实例的变量分割开来，不再共享类的静态变量
-    def __init__(self,draw_ib_collection):
-        # (1) 从集合名称中获取当前DrawIB和别名
-        self.__initlialize_drawib_item(drawib_collection_name=draw_ib_collection.name)
-
+    def __init__(self,draw_ib:str,branch_model:BranchModel):
+        # (1) 读取工作空间下的Config.json来设置当前DrawIB的别名
+        draw_ib_alias_name_dict = ConfigUtils.get_draw_ib_alias_name_dict()
+        self.draw_ib = draw_ib
+        self.draw_ib_alias = draw_ib_alias_name_dict.get(draw_ib,draw_ib)
 
         # (2) 读取工作空间中配置文件的配置项
+        # TODO 这里的PartName_SlotTextureReplaceDict_Dict和TextureResource_Name_FileName_Dict
+        # 可以隐含到import_config中，无需再次声明
         self.import_config = ImportConfig(draw_ib=self.draw_ib)
         self.d3d11GameType:D3D11GameType = self.import_config.d3d11GameType
-
-        # TODO 这个贴图配置也要抽象成类方便使用才行
         self.PartName_SlotTextureReplaceDict_Dict = self.import_config.PartName_SlotTextureReplaceDict_Dict
         self.TextureResource_Name_FileName_Dict = self.import_config.TextureResource_Name_FileName_Dict
 
-        # (2) 解析集合架构，获得每个DrawIB中，每个Component对应的obj列表及其相关属性
-        component_collection_list = draw_ib_collection.children
+        '''
+        这里是要得到每个Component对应的obj_data_model列表
+        在这一步之前，需要对当前DrawIB的所有的obj_data_model填充ib和category_buf_dict属性
+        '''
+        self.draw_ib_ordered_obj_data_model_list:list[ObjDataModel] = branch_model.get_buffered_obj_data_model_list_by_draw_ib_and_game_type(draw_ib=draw_ib,d3d11_game_type=self.import_config.d3d11GameType)
         self.component_model_list:list[ComponentModel] = []
         self.component_name_component_model_dict:dict[str,ComponentModel] = {}
-        # 使用全局key索引，确保存在多个Component时声明的key不会重复
-        self.key_name_mkey_dict:dict[str,M_Key] = {}
-        for component_collection in component_collection_list:
-            component_model = ComponentModel(component_collection=component_collection,d3d11_game_type=self.d3d11GameType,draw_ib=self.draw_ib)
+        for part_name in self.import_config.part_name_list:
+            print("part_name: " + part_name)
+            component_obj_data_model_list = []
+            for obj_data_model in self.draw_ib_ordered_obj_data_model_list:
+                if part_name == str(obj_data_model.component_count):
+                    component_obj_data_model_list.append(obj_data_model)
+                    # print(part_name + " 已赋值")
 
+            component_model = ComponentModel()
+            component_model.component_name = "Component " +part_name
+            component_model.final_ordered_draw_obj_model_list = component_obj_data_model_list
             self.component_model_list.append(component_model)
             self.component_name_component_model_dict[component_model.component_name] = component_model
+        
+        LOG.newline()
 
-            for key_name, mkey in component_model.keyname_mkey_dict.items():
-                self.key_name_mkey_dict[key_name] = mkey
-                print("key_name: " + key_name + "  key:" + str(mkey)) 
-        
-        
-
-        
         # (4) 根据之前解析集合架构的结果，读取obj对象内容到字典中
         self.componentname_ibbuf_dict = {} # 每个Component都生成一个IndexBuffer文件，或者所有Component共用一个IB文件。
         self.__categoryname_bytelist_dict = {} # 每个Category都生成一个CategoryBuffer文件。
@@ -84,11 +97,6 @@ class DrawIBModel:
         self.PartName_IBBufferFileName_Dict = {}
         self.combine_partname_ib_resource_and_filename_dict()
         self.write_buffer_files()
-
-    def __initlialize_drawib_item(self,drawib_collection_name:str):
-        drawib_collection_name_splits = CollectionUtils.get_clean_collection_name(drawib_collection_name).split("_")
-        self.draw_ib = drawib_collection_name_splits[0]
-        self.draw_ib_alias = drawib_collection_name_splits[1]
 
 
     def parse_categoryname_bytelist_dict_3(self):

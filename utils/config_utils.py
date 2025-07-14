@@ -65,6 +65,16 @@ class ConfigUtils:
             draw_ib_list.append(drawib_pair)
 
         return draw_ib_list
+    
+    @classmethod
+    def get_draw_ib_alias_name_dict(cls):
+
+        draw_ib_alias_name_dict = {}
+        draw_ib_pair_list= ConfigUtils.get_extract_drawib_list_from_workspace_config_json()
+        for draw_ib_pair in draw_ib_pair_list:
+            draw_ib_alias_name_dict[draw_ib_pair.DrawIB] = draw_ib_pair.AliasName
+
+        return draw_ib_alias_name_dict
 
 
     @classmethod

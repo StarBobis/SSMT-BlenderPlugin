@@ -13,7 +13,7 @@ from ..generate_mod.ini_model_identity_v import M_IniModel_IdentityV
 from ..generate_mod.drawib_model_universal import DrawIBModelUniversal
 from ..generate_mod.m_counter import M_Counter
 
-from ..games.unity_cs_model import UnityCSModel
+from ..games.unity_universal_model import UnityUniversalModel
 
 class SSMTGenerateModUnityVS(bpy.types.Operator):
     bl_idname = "ssmt.generate_mod_unity_vs"
@@ -279,7 +279,7 @@ class SSMTGenerateModUnityCSV2(bpy.types.Operator):
         所以我们得先统计好当前工作空间集合下所有的以DrawIB为前缀的物体，把它们放到一个DrawIBModel中。
         依次统计完所有的DrawIB的模型列表，然后初始化对应的DrawIBModel，
         '''
-        migoto_mod_model = UnityCSModel(workspace_collection=workspace_collection)
+        migoto_mod_model = UnityUniversalModel(workspace_collection=workspace_collection)
 
 
         # for draw_ib_collection in workspace_collection.children:

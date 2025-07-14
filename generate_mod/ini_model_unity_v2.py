@@ -10,7 +10,6 @@ from ..properties.properties_generate_mod import Properties_GenerateMod
 from ..migoto.migoto_format import TextureReplace
 from .m_counter import M_Counter
 
-from .ini_model_zzz import M_IniModel_ZZZ
 
         
 
